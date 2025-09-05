@@ -105,7 +105,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
       localStorage.setItem('rapidapi_key', apiKey);
     }
 
-    await onDownload(url, format, apiKey || undefined);
+    await onDownload(url, format, apiKey.trim() || undefined);
   };
 
   const handlePaste = async () => {
