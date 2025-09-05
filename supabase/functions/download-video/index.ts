@@ -73,96 +73,149 @@ serve(async (req) => {
     console.log('Platform:', platform)
     console.log('Video ID/URL:', videoId)
 
-    // Use YT-API for both YouTube and TikTok downloads
-    const apiUrl = platform === 'tiktok' 
-      ? `https://yt-api.p.rapidapi.com/dl?url=${encodeURIComponent(videoId)}`
-      : `https://yt-api.p.rapidapi.com/dl?id=${videoId}`
+    let apiUrl, apiHost;
     
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': rapidApiKey,
-        'X-RapidAPI-Host': 'yt-api.p.rapidapi.com'
-      }
-    })
+    if (platform === 'tiktok') {
+      // Use dedicated TikTok API
+      apiUrl = `https://tiktok-video-no-watermark2.p.rapidapi.com/` 
+      apiHost = 'tiktok-video-no-watermark2.p.rapidapi.com'
+    } else {
+      // Use YT-API for YouTube downloads
+      apiUrl = `https://yt-api.p.rapidapi.com/dl?id=${videoId}`
+      apiHost = 'yt-api.p.rapidapi.com'
+    }
+    
+    let response;
+    
+    if (platform === 'tiktok') {
+      // TikTok API request
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'X-RapidAPI-Key': rapidApiKey,
+          'X-RapidAPI-Host': apiHost,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url: videoId,
+          hd: 1
+        })
+      })
+    } else {
+      // YouTube API request
+      response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': rapidApiKey,
+          'X-RapidAPI-Host': apiHost
+        }
+      })
+    }
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('YT-API Error:', response.status, errorText)
+      console.error(`${platform.toUpperCase()} API Error:`, response.status, errorText)
       throw new Error(`API request failed: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('YT-API Response:', JSON.stringify(data, null, 2))
+    console.log(`${platform.toUpperCase()} API Response:`, JSON.stringify(data, null, 2))
 
-    if (!data || !data.formats) {
-      throw new Error('Invalid response from YT-API: no formats found')
-    }
-
-    // Find the best format based on user preference
-    let downloadUrl = ''
-    let selectedFormat = null
-
-    if (format === 'audio') {
-      // Look for audio-only formats
-      const audioFormats = data.formats.filter((f: any) => 
-        f.mimeType && f.mimeType.includes('audio') && f.url
+    // Handle different response formats for TikTok vs YouTube
+    if (platform === 'tiktok') {
+      if (!data || !data.data || !data.data.hdplay) {
+        throw new Error('Invalid response from TikTok API: no download URL found')
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            downloadUrl: data.data.hdplay,
+            title: data.data.title || 'TikTok Video',
+            duration: data.data.duration ? `${Math.floor(data.data.duration / 60)}:${(data.data.duration % 60).toString().padStart(2, '0')}` : null,
+            thumbnail: data.data.cover || null,
+            format: format,
+            quality: 'HD',
+            fileSize: null
+          }
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
       )
-      selectedFormat = audioFormats.find((f: any) => f.mimeType.includes('mp4')) || audioFormats[0]
     } else {
-      // Look for video formats with audio
-      const videoFormats = data.formats.filter((f: any) => 
-        f.mimeType && f.mimeType.includes('video') && f.url && f.hasAudio
-      )
-      
-      // Sort by quality preference
-      const qualityOrder = ['2160p', '1440p', '1080p', '720p', '480p', '360p', '240p']
-      
-      if (quality && quality !== 'best') {
-        // Find specific quality
-        selectedFormat = videoFormats.find((f: any) => f.qualityLabel === quality)
-        if (!selectedFormat) {
-          // If specific quality not found, get the closest one
+      // YouTube processing (existing logic)
+      if (!data || !data.formats) {
+        throw new Error('Invalid response from YT-API: no formats found')
+      }
+
+      // Find the best format based on user preference
+      let downloadUrl = ''
+      let selectedFormat = null
+
+      if (format === 'audio') {
+        // Look for audio-only formats
+        const audioFormats = data.formats.filter((f: any) => 
+          f.mimeType && f.mimeType.includes('audio') && f.url
+        )
+        selectedFormat = audioFormats.find((f: any) => f.mimeType.includes('mp4')) || audioFormats[0]
+      } else {
+        // Look for video formats with audio
+        const videoFormats = data.formats.filter((f: any) => 
+          f.mimeType && f.mimeType.includes('video') && f.url && f.hasAudio
+        )
+        
+        // Sort by quality preference
+        const qualityOrder = ['2160p', '1440p', '1080p', '720p', '480p', '360p', '240p']
+        
+        if (quality && quality !== 'best') {
+          // Find specific quality
+          selectedFormat = videoFormats.find((f: any) => f.qualityLabel === quality)
+          if (!selectedFormat) {
+            // If specific quality not found, get the closest one
+            for (const q of qualityOrder) {
+              selectedFormat = videoFormats.find((f: any) => f.qualityLabel === q)
+              if (selectedFormat) break
+            }
+          }
+        } else {
+          // Get best available quality
           for (const q of qualityOrder) {
             selectedFormat = videoFormats.find((f: any) => f.qualityLabel === q)
             if (selectedFormat) break
           }
-        }
-      } else {
-        // Get best available quality
-        for (const q of qualityOrder) {
-          selectedFormat = videoFormats.find((f: any) => f.qualityLabel === q)
-          if (selectedFormat) break
-        }
-        // Fallback to any video format
-        if (!selectedFormat) {
-          selectedFormat = videoFormats[0]
+          // Fallback to any video format
+          if (!selectedFormat) {
+            selectedFormat = videoFormats[0]
+          }
         }
       }
-    }
 
-    if (!selectedFormat || !selectedFormat.url) {
-      throw new Error(`No suitable ${format} format found`)
-    }
+      if (!selectedFormat || !selectedFormat.url) {
+        throw new Error(`No suitable ${format} format found`)
+      }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          downloadUrl: selectedFormat.url,
-          title: data.title || 'YouTube Video',
-          duration: data.lengthSeconds ? `${Math.floor(data.lengthSeconds / 60)}:${(data.lengthSeconds % 60).toString().padStart(2, '0')}` : null,
-          thumbnail: data.thumbnail?.[0]?.url || null,
-          format: format,
-          quality: selectedFormat.qualityLabel || selectedFormat.mimeType,
-          fileSize: selectedFormat.contentLength
-        }
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            downloadUrl: selectedFormat.url,
+            title: data.title || 'YouTube Video',
+            duration: data.lengthSeconds ? `${Math.floor(data.lengthSeconds / 60)}:${(data.lengthSeconds % 60).toString().padStart(2, '0')}` : null,
+            thumbnail: data.thumbnail?.[0]?.url || null,
+            format: format,
+            quality: selectedFormat.qualityLabel || selectedFormat.mimeType,
+            fileSize: selectedFormat.contentLength
+          }
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      )
+    }
 
   } catch (error) {
     console.error('Error in download-video function:', error)
