@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Download, Music, Video, Link as LinkIcon, Loader2, ExternalLink, Key, Shield, CheckCircle } from "lucide-react";
+import { Download, Music, Video, Link, Loader2, ExternalLink, Key, Shield, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { downloadVideo, triggerDownload, isSupabaseAvailable, type DownloadResult } from "@/utils/hybridDownloadApi";
 
@@ -212,7 +212,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
               YouTube or TikTok url
             </Label>
             <div className="relative">
-              <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Link className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="url"
                 type="url"
