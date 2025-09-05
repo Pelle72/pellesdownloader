@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
-console.log("Download video function up and running!")
+console.log("Download video function starting!")
+console.log("Available environment variables:", Object.keys(Deno.env.toObject()))
 
 serve(async (req) => {
   // Handle CORS preflight requests
