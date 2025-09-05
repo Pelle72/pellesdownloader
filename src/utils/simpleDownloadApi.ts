@@ -22,11 +22,17 @@ export const downloadVideo = async (url: string, format: 'video' | 'audio', apiK
       }
     }
 
-    // Extract video ID from YouTube URL
+    // Extract video ID from YouTube URL (including Shorts)
     let videoId = ''
     const patterns = [
+      // Regular YouTube URLs
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-      /youtube\.com\/v\/([^&\n?#]+)/
+      /youtube\.com\/v\/([^&\n?#]+)/,
+      // YouTube Shorts URLs
+      /youtube\.com\/shorts\/([^&\n?#]+)/,
+      /m\.youtube\.com\/shorts\/([^&\n?#]+)/,
+      // Mobile URLs
+      /m\.youtube\.com\/watch\?v=([^&\n?#]+)/
     ]
     
     for (const pattern of patterns) {

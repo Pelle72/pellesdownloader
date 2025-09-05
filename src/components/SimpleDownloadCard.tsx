@@ -21,7 +21,7 @@ export const SimpleDownloadCard = ({ onDownload, isLoading = false, downloadResu
   const { toast } = useToast();
 
   const validateUrl = (input: string) => {
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+    const youtubeRegex = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com\/(watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/).+/;
     return youtubeRegex.test(input);
   };
 
@@ -85,9 +85,9 @@ export const SimpleDownloadCard = ({ onDownload, isLoading = false, downloadResu
           YouTube Downloader
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Download videos and audio from YouTube
+          Download videos and audio from YouTube (including Shorts)
           <br />
-          <span className="text-xs text-primary/70 mt-1 block">✅ Direct API integration</span>
+          <span className="text-xs text-primary/70 mt-1 block">✅ Supports regular videos & Shorts</span>
         </CardDescription>
       </CardHeader>
       
@@ -118,14 +118,14 @@ export const SimpleDownloadCard = ({ onDownload, isLoading = false, downloadResu
           {/* URL Input */}
           <div className="space-y-2">
             <Label htmlFor="url" className="text-sm font-medium">
-              YouTube URL
+              YouTube URL (Videos & Shorts)
             </Label>
             <div className="relative">
               <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="url"
                 type="url"
-                placeholder="Paste YouTube URL here..."
+                placeholder="Paste YouTube URL or Shorts link here..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
