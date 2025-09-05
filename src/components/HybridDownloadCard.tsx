@@ -134,7 +134,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
           <Download className="w-8 h-8 text-primary-foreground" />
         </div>
         <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          YouTube Downloader
+          Pelle's YouTube and TikTok grabber
         </CardTitle>
         <CardDescription className="text-muted-foreground">
           Download videos and audio from YouTube (including Shorts)
