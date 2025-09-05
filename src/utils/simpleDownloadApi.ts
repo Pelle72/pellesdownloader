@@ -39,18 +39,23 @@ export const downloadVideo = async (url: string, format: 'video' | 'audio', apiK
       const match = url.match(pattern)
       if (match) {
         videoId = match[1]
+        console.log('Video ID extracted:', videoId, 'from pattern:', pattern.source)
         break
       }
     }
 
     if (!videoId) {
+      console.error('Failed to extract video ID from URL:', url)
       throw new Error('Invalid YouTube URL. Could not extract video ID.')
     }
 
-    console.log('Extracting video ID:', videoId)
+    console.log('Processing URL:', url)
+    console.log('Extracted video ID:', videoId)
+    console.log('Format requested:', format)
 
     // Call YT-API directly from frontend
     const apiUrl = `https://yt-api.p.rapidapi.com/dl?id=${videoId}`
+    console.log('API URL:', apiUrl)
     
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -62,35 +67,63 @@ export const downloadVideo = async (url: string, format: 'video' | 'audio', apiK
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('YT-API Error:', response.status, errorText)
-      throw new Error(`API request failed: ${response.status}`)
+      console.error('YT-API Error Details:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: apiUrl,
+        videoId: videoId,
+        originalUrl: url,
+        errorResponse: errorText
+      })
+      throw new Error(`API request failed: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('YT-API Response received')
+    console.log('YT-API Response for video ID:', videoId)
+    console.log('Response data:', JSON.stringify(data, null, 2))
 
-    if (!data || !data.formats) {
+    if (!data) {
+      throw new Error('Empty response from YT-API')
+    }
+
+    if (!data.formats) {
+      console.error('No formats in response:', data)
       throw new Error('Invalid response from YT-API: no formats found')
     }
 
     // Find the best format based on user preference
     let selectedFormat = null
 
+    console.log('Available formats:', data.formats.length)
+    console.log('Format types available:', data.formats.map((f: any) => ({
+      mimeType: f.mimeType,
+      hasAudio: f.hasAudio,
+      hasVideo: f.hasVideo,
+      qualityLabel: f.qualityLabel
+    })))
+
     if (format === 'audio') {
       // Look for audio-only formats
       const audioFormats = data.formats.filter((f: any) => 
         f.mimeType && f.mimeType.includes('audio') && f.url
       )
+      console.log('Audio formats found:', audioFormats.length)
       selectedFormat = audioFormats.find((f: any) => f.mimeType.includes('mp4')) || audioFormats[0]
     } else {
       // Look for video formats with audio
       const videoFormats = data.formats.filter((f: any) => 
-        f.mimeType && f.mimeType.includes('video') && f.url && f.hasAudio
+        f.mimeType && f.mimeType.includes('video') && f.url
       )
+      console.log('Video formats found:', videoFormats.length)
+      
+      // For Shorts, try any available video format since quality options might be limited
       selectedFormat = videoFormats.find((f: any) => f.qualityLabel === '720p') || 
                      videoFormats.find((f: any) => f.qualityLabel === '480p') || 
-                     videoFormats[0]
+                     videoFormats.find((f: any) => f.qualityLabel === '360p') ||
+                     videoFormats[0] // Take any available format for Shorts
     }
+
+    console.log('Selected format:', selectedFormat)
 
     if (!selectedFormat || !selectedFormat.url) {
       throw new Error(`No suitable ${format} format found`)
