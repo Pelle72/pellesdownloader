@@ -1,12 +1,16 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { HybridDownloadCard } from "@/components/HybridDownloadCard";
+import { FileManager } from "@/components/FileManager";
 import { useToast } from "@/hooks/use-toast";
 import { downloadVideo } from "@/utils/hybridDownloadApi";
-import { Youtube } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Youtube, History } from "lucide-react";
 
 const Index = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadResult, setDownloadResult] = useState(null);
+  const [showFileManager, setShowFileManager] = useState(false);
   const { toast } = useToast();
 
   const handleDownload = async (url: string, format: string, apiKey?: string, quality?: string) => {
@@ -22,6 +26,23 @@ const Index = () => {
       const result = await downloadVideo(url, format as 'video' | 'audio', apiKey, quality);
       
       if (result.success && result.data) {
+        // Save to download history
+        try {
+          const platform = url.includes('tiktok') ? 'tiktok' : 'youtube';
+          await supabase.from('downloads').insert({
+            title: result.data.title,
+            url: url,
+            download_url: result.data.downloadUrl,
+            format: format,
+            quality: quality,
+            duration: result.data.duration,
+            platform: platform,
+          });
+        } catch (dbError) {
+          console.error('Error saving to history:', dbError);
+          // Don't show error to user, just log it
+        }
+
         toast({
           title: "Download Ready!",
           description: `${result.data.title} is ready to download`,
@@ -71,12 +92,30 @@ const Index = () => {
             </p>
           </div>
 
+          {/* History Button */}
+          <div className="mb-8">
+            <Button
+              variant="outline"
+              onClick={() => setShowFileManager(true)}
+              className="flex items-center gap-2"
+            >
+              <History className="w-4 h-4" />
+              History
+            </Button>
+          </div>
+
           {/* Download Card */}
           <div className="mb-16">
             <HybridDownloadCard onDownload={handleDownload} isLoading={isDownloading} downloadResult={downloadResult} />
           </div>
         </div>
       </div>
+
+      {/* File Manager */}
+      <FileManager 
+        isOpen={showFileManager} 
+        onClose={() => setShowFileManager(false)} 
+      />
     </div>
   );
 };
