@@ -81,7 +81,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-70"
         style={{
-          backgroundImage: "url('/lovable-uploads/811f3234-7612-49e5-abe6-352960330de9.png')",
+          backgroundImage: `url('/lovable-uploads/811f3234-7612-49e5-abe6-352960330de9.png')`,
           backgroundSize: "cover",
           backgroundPosition: "center"
         }}
