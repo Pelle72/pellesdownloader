@@ -3,10 +3,15 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Create client with fallback to avoid startup errors
-const supabase = supabaseUrl && supabaseAnonKey 
+console.log('Supabase URL:', supabaseUrl)
+console.log('Supabase Key exists:', !!supabaseAnonKey)
+
+// Only create client if both values exist and are not empty
+const supabase = (supabaseUrl && supabaseAnonKey && supabaseUrl.trim() && supabaseAnonKey.trim()) 
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null
+
+console.log('Supabase client created:', !!supabase)
 
 export interface DownloadResult {
   success: boolean
