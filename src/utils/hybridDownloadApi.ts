@@ -109,7 +109,48 @@ export const downloadVideo = async (url: string, format: 'video' | 'audio', apiK
 
 // Direct API call function (same as before)
 const directApiCall = async (url: string, format: 'video' | 'audio', apiKey: string): Promise<DownloadResult> => {
-  // Extract video ID from YouTube URL (including Shorts)
+  console.log('🔄 Making direct API call for:', url)
+  
+  // Check if it's a TikTok URL
+  if (url.toLowerCase().includes('tiktok')) {
+    console.log('🎵 Detected TikTok URL - using TikTok API')
+    
+    const response = await fetch('https://tiktok-video-no-watermark2.p.rapidapi.com/', {
+      method: 'POST',
+      headers: {
+        'X-RapidAPI-Key': apiKey,
+        'X-RapidAPI-Host': 'tiktok-video-no-watermark2.p.rapidapi.com',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        url: url,
+        hd: 1
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`TikTok API request failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    
+    if (!data || !data.data || !data.data.hdplay) {
+      throw new Error('Invalid response from TikTok API: no download URL found')
+    }
+
+    return {
+      success: true,
+      data: {
+        downloadUrl: data.data.hdplay,
+        title: data.data.title || 'TikTok Video',
+        duration: data.data.duration ? `${Math.floor(data.data.duration / 60)}:${(data.data.duration % 60).toString().padStart(2, '0')}` : undefined,
+        thumbnail: data.data.cover || undefined,
+        format: format
+      }
+    }
+  }
+
+  // YouTube processing - Extract video ID from YouTube URL (including Shorts)
   let videoId = ''
   const patterns = [
     // Regular YouTube URLs
@@ -131,7 +172,7 @@ const directApiCall = async (url: string, format: 'video' | 'audio', apiKey: str
   }
 
   if (!videoId) {
-    throw new Error('Invalid YouTube URL. Could not extract video ID.')
+    throw new Error('Invalid URL. Could not extract video ID from YouTube URL.')
   }
 
   // Call YT-API directly
