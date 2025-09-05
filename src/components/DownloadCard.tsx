@@ -4,15 +4,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Download, Music, Video, Link as LinkIcon, Loader2 } from "lucide-react";
+import { Download, Music, Video, Link as LinkIcon, Loader2, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { downloadVideo, triggerDownload, type DownloadResult } from "@/utils/downloadApi";
 
 interface DownloadCardProps {
-  onDownload: (url: string, format: string) => void;
+  onDownload: (url: string, format: string) => Promise<void>;
   isLoading?: boolean;
+  downloadResult?: DownloadResult | null;
 }
 
-export const DownloadCard = ({ onDownload, isLoading = false }: DownloadCardProps) => {
+export const DownloadCard = ({ onDownload, isLoading = false, downloadResult }: DownloadCardProps) => {
   const [url, setUrl] = useState("");
   const [format, setFormat] = useState("video");
   const { toast } = useToast();
@@ -23,7 +25,7 @@ export const DownloadCard = ({ onDownload, isLoading = false }: DownloadCardProp
     return youtubeRegex.test(input) || tiktokRegex.test(input);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!url.trim()) {
@@ -44,7 +46,7 @@ export const DownloadCard = ({ onDownload, isLoading = false }: DownloadCardProp
       return;
     }
 
-    onDownload(url, format);
+    await onDownload(url, format);
   };
 
   const handlePaste = async () => {
@@ -74,9 +76,9 @@ export const DownloadCard = ({ onDownload, isLoading = false }: DownloadCardProp
           Video Downloader
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Download videos from YouTube and TikTok
+          Download videos from YouTube and TikTok with RapidAPI
           <br />
-          <span className="text-xs text-primary/70 mt-1 block">⚠️ Demo version - No actual downloads</span>
+          <span className="text-xs text-primary/70 mt-1 block">✅ Real downloads powered by your API key</span>
         </CardDescription>
       </CardHeader>
       
@@ -155,6 +157,42 @@ export const DownloadCard = ({ onDownload, isLoading = false }: DownloadCardProp
             )}
           </Button>
         </form>
+
+        {/* Download Result */}
+        {downloadResult && (
+          <div className="mt-6 p-4 bg-secondary/30 rounded-lg border border-border/50">
+            {downloadResult.success && downloadResult.data ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <Download className="w-4 h-4" />
+                  Ready to Download
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium">{downloadResult.data.title}</p>
+                  {downloadResult.data.duration && (
+                    <p>Duration: {downloadResult.data.duration}</p>
+                  )}
+                </div>
+                <Button 
+                  onClick={() => downloadResult.data && triggerDownload(
+                    downloadResult.data.downloadUrl, 
+                    `${downloadResult.data.title}.${format === 'audio' ? 'mp3' : 'mp4'}`
+                  )}
+                  variant="hero"
+                  size="sm"
+                  className="w-full"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Download File
+                </Button>
+              </div>
+            ) : (
+              <div className="text-sm text-destructive">
+                ❌ {downloadResult.error || 'Download failed'}
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

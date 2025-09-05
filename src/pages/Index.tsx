@@ -2,36 +2,50 @@ import { useState } from "react";
 import { DownloadCard } from "@/components/DownloadCard";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { useToast } from "@/hooks/use-toast";
+import { downloadVideo } from "@/utils/downloadApi";
 import { Youtube, Clock, CheckCircle } from "lucide-react";
 
 const Index = () => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadResult, setDownloadResult] = useState(null);
   const { toast } = useToast();
 
   const handleDownload = async (url: string, format: string) => {
     setIsDownloading(true);
+    setDownloadResult(null);
     
-    // Demo simulation - in production this would call your backend API
-    toast({
-      title: "Demo Mode",
-      description: "This is a demo interface. Real downloads require backend integration.",
-    });
-
-    // Simulate more realistic download process
-    setTimeout(() => {
+    try {
       toast({
         title: "Processing Video",
-        description: "Analyzing video metadata...",
+        description: "Fetching video information...",
       });
-    }, 1000);
 
-    setTimeout(() => {
-      setIsDownloading(false);
+      const result = await downloadVideo(url, format as 'video' | 'audio');
+      
+      if (result.success && result.data) {
+        toast({
+          title: "Download Ready!",
+          description: `${result.data.title} is ready to download`,
+        });
+        setDownloadResult(result);
+      } else {
+        toast({
+          title: "Download Failed",
+          description: result.error || "Could not process the video",
+          variant: "destructive",
+        });
+        setDownloadResult(result);
+      }
+    } catch (error) {
       toast({
-        title: "Demo Complete",
-        description: `Demo ${format} processing finished. Integrate with yt-dlp or similar for real downloads.`,
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
       });
-    }, 4000);
+      setDownloadResult({ success: false, error: "An unexpected error occurred" });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -55,7 +69,7 @@ const Index = () => {
 
           {/* Download Card */}
           <div className="mb-16">
-            <DownloadCard onDownload={handleDownload} isLoading={isDownloading} />
+            <DownloadCard onDownload={handleDownload} isLoading={isDownloading} downloadResult={downloadResult} />
           </div>
 
           {/* Quick Stats */}
