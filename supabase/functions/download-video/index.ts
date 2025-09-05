@@ -6,7 +6,8 @@ const corsHeaders = {
 }
 
 console.log("Download video function starting!")
-console.log("Available environment variables:", Object.keys(Deno.env.toObject()))
+console.log("All environment variables:", Object.keys(Deno.env.toObject()))
+console.log("RAPIDAPI_KEY in env:", !!Deno.env.get('RAPIDAPI_KEY'))
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -15,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url, format, apiKey } = await req.json()
+    const { url, format } = await req.json()
     
     if (!url) {
       throw new Error('URL is required')
@@ -24,21 +25,18 @@ serve(async (req) => {
     console.log('=== DEBUG INFO ===')
     console.log('URL:', url)
     console.log('Format:', format)
-    console.log('API Key provided:', !!apiKey)
     
     // Check environment variables
     const rapidApiKey = Deno.env.get('RAPIDAPI_KEY')
     console.log('RAPIDAPI_KEY found in env:', !!rapidApiKey)
+    console.log('RAPIDAPI_KEY length:', rapidApiKey ? rapidApiKey.length : 0)
     
-    // Use provided API key or environment variable
-    const finalKey = apiKey || rapidApiKey
-    
-    if (!finalKey) {
-      console.error('❌ No RapidAPI key available')
-      throw new Error('RapidAPI key required either as parameter or environment variable')
+    if (!rapidApiKey) {
+      console.error('❌ RapidAPI key not found in environment variables')
+      throw new Error('RapidAPI key not configured in Supabase secrets')
     }
     
-    console.log('Using API key from:', apiKey ? 'parameter' : 'environment')
+    console.log('✅ Using RapidAPI key from environment')
 
     console.log(`Processing ${format} download for: ${url}`)
 
@@ -69,7 +67,7 @@ serve(async (req) => {
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': finalKey,
+        'X-RapidAPI-Key': rapidApiKey,
         'X-RapidAPI-Host': 'yt-api.p.rapidapi.com'
       }
     })
