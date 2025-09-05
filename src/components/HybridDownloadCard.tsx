@@ -216,7 +216,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
               <Input
                 id="url"
                 type="url"
-                placeholder="Paste YouTube URL or Shorts link here..."
+                placeholder="Paste youtube or TikTok link"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
