@@ -41,17 +41,18 @@ serve(async (req) => {
 
     console.log(`Processing ${format} download for: ${url}`)
 
-    // Extract video ID from YouTube URL or detect TikTok
+    // Detect platform and extract video info
     let videoId = ''
     let platform = 'youtube'
     
-    // Check if it's a TikTok URL
-    if (url.includes('tiktok.com') || url.includes('vm.tiktok.com')) {
+    console.log('Processing URL:', url)
+    
+    // Simple TikTok detection
+    if (url.toLowerCase().includes('tiktok')) {
       platform = 'tiktok'
-      // For TikTok, we'll use the full URL
       videoId = url
-      console.log('Detected TikTok URL')
-    } else {
+      console.log('✅ Detected as TikTok URL')
+    } else if (url.toLowerCase().includes('youtube') || url.toLowerCase().includes('youtu.be')) {
       // YouTube URL patterns
       const patterns = [
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
@@ -63,14 +64,18 @@ serve(async (req) => {
         const match = url.match(pattern)
         if (match) {
           videoId = match[1]
-          console.log('Detected YouTube URL, video ID:', videoId)
+          console.log('✅ Detected as YouTube URL, video ID:', videoId)
           break
         }
       }
 
       if (!videoId) {
-        throw new Error('Invalid URL. Please provide a valid YouTube or TikTok URL.')
+        console.error('❌ Could not extract YouTube video ID from:', url)
+        throw new Error('Invalid YouTube URL. Could not extract video ID.')
       }
+    } else {
+      console.error('❌ URL not recognized as YouTube or TikTok:', url)
+      throw new Error('Invalid URL. Please provide a valid YouTube or TikTok URL.')
     }
 
     console.log('Platform:', platform)
