@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url, format } = await req.json()
+    const { url, format, quality } = await req.json()
     
     if (!url) {
       throw new Error('URL is required')
@@ -25,6 +25,7 @@ serve(async (req) => {
     console.log('=== DEBUG INFO ===')
     console.log('URL:', url)
     console.log('Format:', format)
+    console.log('Quality:', quality)
     
     // Check environment variables
     const rapidApiKey = Deno.env.get('RAPIDAPI_KEY')
@@ -42,27 +43,40 @@ serve(async (req) => {
 
     // Extract video ID from YouTube URL
     let videoId = ''
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-      /youtube\.com\/v\/([^&\n?#]+)/
-    ]
+    let platform = 'youtube'
     
-    for (const pattern of patterns) {
-      const match = url.match(pattern)
-      if (match) {
-        videoId = match[1]
-        break
+    // Check if it's a TikTok URL
+    if (url.includes('tiktok.com')) {
+      platform = 'tiktok'
+      // For TikTok, we'll use the full URL
+      videoId = url
+    } else {
+      // YouTube URL patterns
+      const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+        /youtube\.com\/v\/([^&\n?#]+)/
+      ]
+      
+      for (const pattern of patterns) {
+        const match = url.match(pattern)
+        if (match) {
+          videoId = match[1]
+          break
+        }
+      }
+
+      if (!videoId) {
+        throw new Error('Invalid YouTube URL. Could not extract video ID.')
       }
     }
 
-    if (!videoId) {
-      throw new Error('Invalid YouTube URL. Could not extract video ID.')
-    }
+    console.log('Platform:', platform)
+    console.log('Video ID/URL:', videoId)
 
-    console.log('Extracted video ID:', videoId)
-
-    // Use YT-API for YouTube downloads
-    const apiUrl = `https://yt-api.p.rapidapi.com/dl?id=${videoId}`
+    // Use YT-API for both YouTube and TikTok downloads
+    const apiUrl = platform === 'tiktok' 
+      ? `https://yt-api.p.rapidapi.com/dl?url=${encodeURIComponent(videoId)}`
+      : `https://yt-api.p.rapidapi.com/dl?id=${videoId}`
     
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -90,7 +104,7 @@ serve(async (req) => {
     let selectedFormat = null
 
     if (format === 'audio') {
-      // Look for audio-only formats (usually have no video)
+      // Look for audio-only formats
       const audioFormats = data.formats.filter((f: any) => 
         f.mimeType && f.mimeType.includes('audio') && f.url
       )
@@ -100,9 +114,31 @@ serve(async (req) => {
       const videoFormats = data.formats.filter((f: any) => 
         f.mimeType && f.mimeType.includes('video') && f.url && f.hasAudio
       )
-      selectedFormat = videoFormats.find((f: any) => f.qualityLabel === '720p') || 
-                     videoFormats.find((f: any) => f.qualityLabel === '480p') || 
-                     videoFormats[0]
+      
+      // Sort by quality preference
+      const qualityOrder = ['2160p', '1440p', '1080p', '720p', '480p', '360p', '240p']
+      
+      if (quality && quality !== 'best') {
+        // Find specific quality
+        selectedFormat = videoFormats.find((f: any) => f.qualityLabel === quality)
+        if (!selectedFormat) {
+          // If specific quality not found, get the closest one
+          for (const q of qualityOrder) {
+            selectedFormat = videoFormats.find((f: any) => f.qualityLabel === q)
+            if (selectedFormat) break
+          }
+        }
+      } else {
+        // Get best available quality
+        for (const q of qualityOrder) {
+          selectedFormat = videoFormats.find((f: any) => f.qualityLabel === q)
+          if (selectedFormat) break
+        }
+        // Fallback to any video format
+        if (!selectedFormat) {
+          selectedFormat = videoFormats[0]
+        }
+      }
     }
 
     if (!selectedFormat || !selectedFormat.url) {

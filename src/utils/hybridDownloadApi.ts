@@ -52,7 +52,7 @@ export interface DownloadResult {
   error?: string
 }
 
-export const downloadVideo = async (url: string, format: 'video' | 'audio', apiKey?: string): Promise<DownloadResult> => {
+export const downloadVideo = async (url: string, format: 'video' | 'audio', apiKey?: string, quality?: string): Promise<DownloadResult> => {
   try {
     // Try to initialize Supabase client
     const supabase = initializeSupabase()
@@ -61,7 +61,7 @@ export const downloadVideo = async (url: string, format: 'video' | 'audio', apiK
       console.log('🚀 Using Supabase edge function for download')
       
       const { data, error } = await supabase.functions.invoke('download-video', {
-        body: { url, format }
+        body: { url, format, quality }
       })
 
       if (error) {

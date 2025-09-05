@@ -10,7 +10,7 @@ const Index = () => {
   const [downloadResult, setDownloadResult] = useState(null);
   const { toast } = useToast();
 
-  const handleDownload = async (url: string, format: string, apiKey?: string) => {
+  const handleDownload = async (url: string, format: string, apiKey?: string, quality?: string) => {
     setIsDownloading(true);
     setDownloadResult(null);
     
@@ -20,7 +20,7 @@ const Index = () => {
         description: "Fetching video information...",
       });
 
-      const result = await downloadVideo(url, format as 'video' | 'audio', apiKey);
+      const result = await downloadVideo(url, format as 'video' | 'audio', apiKey, quality);
       
       if (result.success && result.data) {
         toast({

@@ -9,14 +9,15 @@ import { useToast } from "@/hooks/use-toast";
 import { downloadVideo, triggerDownload, isSupabaseAvailable, type DownloadResult } from "@/utils/hybridDownloadApi";
 
 interface HybridDownloadCardProps {
-  onDownload: (url: string, format: string, apiKey?: string) => Promise<void>;
+  onDownload: (url: string, format: string, apiKey?: string, quality?: string) => Promise<void>;
   isLoading?: boolean;
   downloadResult?: DownloadResult | null;
 }
 
 export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResult }: HybridDownloadCardProps) => {
   const [url, setUrl] = useState("");
-  const [format, setFormat] = useState("video");
+  const [format, setFormat] = useState<"video" | "audio">("video");
+  const [quality, setQuality] = useState("best");
   const [apiKey, setApiKey] = useState("");
   const [supabaseReady, setSupabaseReady] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
@@ -66,7 +67,8 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
 
   const validateUrl = (input: string) => {
     const youtubeRegex = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com\/(watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/).+/;
-    return youtubeRegex.test(input);
+    const tiktokRegex = /^(https?:\/\/)?(www\.|m\.)?(tiktok\.com|vm\.tiktok\.com).+/;
+    return youtubeRegex.test(input) || tiktokRegex.test(input);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +86,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
     if (!validateUrl(url)) {
       toast({
         title: "Invalid URL",
-        description: "Please enter a valid YouTube URL",
+        description: "Please enter a valid YouTube or TikTok URL",
         variant: "destructive",
       });
       return;
@@ -105,7 +107,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
       localStorage.setItem('rapidapi_key', apiKey);
     }
 
-    await onDownload(url, format, apiKey.trim() || undefined);
+    await onDownload(url, format, apiKey.trim() || undefined, quality);
   };
 
   const handlePaste = async () => {
@@ -238,7 +240,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
             <Label className="text-sm font-medium">Download Format</Label>
             <RadioGroup
               value={format}
-              onValueChange={setFormat}
+              onValueChange={(value) => setFormat(value as "video" | "audio")}
               className="grid grid-cols-2 gap-4"
               disabled={isLoading}
             >
@@ -258,6 +260,36 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
               </div>
             </RadioGroup>
           </div>
+
+          {/* Quality Selection (only for video) */}
+          {format === "video" && (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Video Quality</Label>
+              <RadioGroup
+                value={quality}
+                onValueChange={setQuality}
+                className="grid grid-cols-2 gap-3"
+                disabled={isLoading}
+              >
+                <div className="flex items-center space-x-2 bg-secondary/30 p-3 rounded-lg border border-border/50 hover:bg-secondary/50 transition-colors">
+                  <RadioGroupItem value="best" id="best" />
+                  <Label htmlFor="best" className="cursor-pointer text-xs">Best Available</Label>
+                </div>
+                <div className="flex items-center space-x-2 bg-secondary/30 p-3 rounded-lg border border-border/50 hover:bg-secondary/50 transition-colors">
+                  <RadioGroupItem value="2160p" id="2160p" />
+                  <Label htmlFor="2160p" className="cursor-pointer text-xs">4K (2160p)</Label>
+                </div>
+                <div className="flex items-center space-x-2 bg-secondary/30 p-3 rounded-lg border border-border/50 hover:bg-secondary/50 transition-colors">
+                  <RadioGroupItem value="1080p" id="1080p" />
+                  <Label htmlFor="1080p" className="cursor-pointer text-xs">Full HD (1080p)</Label>
+                </div>
+                <div className="flex items-center space-x-2 bg-secondary/30 p-3 rounded-lg border border-border/50 hover:bg-secondary/50 transition-colors">
+                  <RadioGroupItem value="720p" id="720p" />
+                  <Label htmlFor="720p" className="cursor-pointer text-xs">HD (720p)</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
 
           <Button
             type="submit"
