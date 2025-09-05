@@ -80,5 +80,44 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Prevent overscroll bounce on mobile */
+    overscroll-behavior: none;
+    /* Improve touch scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* PWA mobile optimizations */
+  html {
+    /* Prevent zoom on input focus */
+    -webkit-text-size-adjust: 100%;
+    /* Enable momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide scrollbars but keep functionality */
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+
+  /* Improve mobile touch targets */
+  button, input, select, textarea {
+    /* Ensure minimum 44px touch target */
+    min-height: 44px;
+    /* Prevent zoom on input focus */
+    font-size: 16px;
+  }
+
+  /* Mobile-specific adjustments */
+  @media (max-width: 768px) {
+    body {
+      /* Prevent horizontal scroll */
+      overflow-x: hidden;
+    }
+    
+    /* Improve button accessibility on mobile */
+    button {
+      min-height: 48px;
+    }
   }
 }

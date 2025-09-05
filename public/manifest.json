@@ -1,12 +1,12 @@
 {
-  "name": "YouTube Downloader",
-  "short_name": "YT Downloader",
-  "description": "Fast, secure video downloader for YouTube and TikTok. Download videos in HD or extract audio as MP3.",
+  "name": "Jesper's Awesome Downloader + Bella's Witchy TikTok Stealer",
+  "short_name": "Witchy Downloader",
+  "description": "Mystical video downloader for YouTube and TikTok with supernatural powers",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f23",
   "theme_color": "#8b5cf6",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -19,6 +19,19 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/splash-screen.png",
+      "sizes": "1080x1080",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "splash_pages": [
+    {
+      "src": "/splash-screen.png",
+      "sizes": "1080x1080",
+      "type": "image/png"
     }
   ],
   "categories": ["utilities", "productivity"],
