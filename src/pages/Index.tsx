@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { HybridDownloadCard } from "@/components/HybridDownloadCard";
-import { FeatureGrid } from "@/components/FeatureGrid";
 import { useToast } from "@/hooks/use-toast";
 import { downloadVideo } from "@/utils/hybridDownloadApi";
-import { Youtube, Clock, CheckCircle } from "lucide-react";
+import { Youtube } from "lucide-react";
 
 const Index = () => {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -76,57 +75,8 @@ const Index = () => {
           <div className="mb-16">
             <HybridDownloadCard onDownload={handleDownload} isLoading={isDownloading} downloadResult={downloadResult} />
           </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-16">
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-3 bg-gradient-primary rounded-full flex items-center justify-center">
-                <Youtube className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div className="text-2xl font-bold text-foreground">500K+</div>
-              <div className="text-sm text-muted-foreground">Videos Downloaded</div>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-3 bg-gradient-primary rounded-full flex items-center justify-center">
-                <Clock className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div className="text-2xl font-bold text-foreground">&lt; 30s</div>
-              <div className="text-sm text-muted-foreground">Average Process Time</div>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-3 bg-gradient-primary rounded-full flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div className="text-2xl font-bold text-foreground">99.9%</div>
-              <div className="text-sm text-muted-foreground">Success Rate</div>
-            </div>
-          </div>
         </div>
       </div>
-
-      {/* Features Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-foreground">
-            Powerful Features
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to download and convert videos from your favorite platforms
-          </p>
-        </div>
-        <FeatureGrid />
-      </div>
-
-      {/* Footer */}
-      <footer className="border-t border-border/50 bg-card/30 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              © 2024 Video Downloader. Fast, secure, and reliable downloads.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
