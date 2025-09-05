@@ -343,7 +343,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
             variant="hero"
             size="lg"
             className="w-full h-12"
-            disabled={isLoading || (!youtubeUrl.trim() && !tiktokUrl.trim()) || (!supabaseReady && !apiKey.trim())}
+            disabled={isLoading || (!youtubeUrl.trim() && !tiktokUrl.trim())}
           >
             {isLoading ? (
               <>
