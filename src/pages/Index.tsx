@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { DownloadCard } from "@/components/DownloadCard";
+import { SimpleDownloadCard } from "@/components/SimpleDownloadCard";
 import { FeatureGrid } from "@/components/FeatureGrid";
-import { SupabaseStatusChecker } from "@/components/SupabaseStatusChecker";
 import { useToast } from "@/hooks/use-toast";
-import { downloadVideo } from "@/utils/downloadApi";
+import { downloadVideo } from "@/utils/simpleDownloadApi";
 import { Youtube, Clock, CheckCircle } from "lucide-react";
 
 const Index = () => {
@@ -11,7 +10,7 @@ const Index = () => {
   const [downloadResult, setDownloadResult] = useState(null);
   const { toast } = useToast();
 
-  const handleDownload = async (url: string, format: string) => {
+  const handleDownload = async (url: string, format: string, apiKey: string) => {
     setIsDownloading(true);
     setDownloadResult(null);
     
@@ -21,7 +20,7 @@ const Index = () => {
         description: "Fetching video information...",
       });
 
-      const result = await downloadVideo(url, format as 'video' | 'audio');
+      const result = await downloadVideo(url, format as 'video' | 'audio', apiKey);
       
       if (result.success && result.data) {
         toast({
@@ -31,7 +30,7 @@ const Index = () => {
         setDownloadResult(result);
       } else {
         toast({
-          title: "Download Failed",
+          title: "Download Failed", 
           description: result.error || "Could not process the video",
           variant: "destructive",
         });
@@ -70,14 +69,9 @@ const Index = () => {
             </p>
           </div>
 
-          {/* Supabase Status */}
-          <div className="mb-8 max-w-md mx-auto">
-            <SupabaseStatusChecker />
-          </div>
-
           {/* Download Card */}
           <div className="mb-16">
-            <DownloadCard onDownload={handleDownload} isLoading={isDownloading} downloadResult={downloadResult} />
+            <SimpleDownloadCard onDownload={handleDownload} isLoading={isDownloading} downloadResult={downloadResult} />
           </div>
 
           {/* Quick Stats */}
