@@ -23,53 +23,86 @@ serve(async (req) => {
 
     console.log(`Processing ${format} download for: ${url}`)
 
-    // Determine the appropriate RapidAPI endpoint based on URL
-    let apiEndpoint = ''
-    let headers = {
-      'X-RapidAPI-Key': rapidApiKey,
-      'X-RapidAPI-Host': '',
-      'Content-Type': 'application/json'
+    // Extract video ID from YouTube URL
+    let videoId = ''
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/v\/([^&\n?#]+)/
+    ]
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern)
+      if (match) {
+        videoId = match[1]
+        break
+      }
     }
 
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      // YouTube download endpoint
-      apiEndpoint = 'https://youtube-mp36.p.rapidapi.com/dl'
-      headers['X-RapidAPI-Host'] = 'youtube-mp36.p.rapidapi.com'
-    } else if (url.includes('tiktok.com')) {
-      // TikTok download endpoint  
-      apiEndpoint = 'https://tiktok-video-no-watermark2.p.rapidapi.com/'
-      headers['X-RapidAPI-Host'] = 'tiktok-video-no-watermark2.p.rapidapi.com'
-    } else {
-      throw new Error('Unsupported platform. Only YouTube and TikTok are supported.')
+    if (!videoId) {
+      throw new Error('Invalid YouTube URL. Could not extract video ID.')
     }
 
-    // Make request to RapidAPI
-    const response = await fetch(apiEndpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        link: url,
-        format: format === 'audio' ? 'mp3' : 'mp4'
-      })
+    console.log('Extracted video ID:', videoId)
+
+    // Use YT-API for YouTube downloads
+    const apiUrl = `https://yt-api.p.rapidapi.com/dl?id=${videoId}`
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': 'yt-api.p.rapidapi.com'
+      }
     })
 
     if (!response.ok) {
-      const errorData = await response.text()
-      console.error('RapidAPI Error:', errorData)
-      throw new Error(`API request failed: ${response.status}`)
+      const errorText = await response.text()
+      console.error('YT-API Error:', response.status, errorText)
+      throw new Error(`API request failed: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    
+    console.log('YT-API Response:', JSON.stringify(data, null, 2))
+
+    if (!data || !data.formats) {
+      throw new Error('Invalid response from YT-API: no formats found')
+    }
+
+    // Find the best format based on user preference
+    let downloadUrl = ''
+    let selectedFormat = null
+
+    if (format === 'audio') {
+      // Look for audio-only formats (usually have no video)
+      const audioFormats = data.formats.filter((f: any) => 
+        f.mimeType && f.mimeType.includes('audio') && f.url
+      )
+      selectedFormat = audioFormats.find((f: any) => f.mimeType.includes('mp4')) || audioFormats[0]
+    } else {
+      // Look for video formats with audio
+      const videoFormats = data.formats.filter((f: any) => 
+        f.mimeType && f.mimeType.includes('video') && f.url && f.hasAudio
+      )
+      selectedFormat = videoFormats.find((f: any) => f.qualityLabel === '720p') || 
+                     videoFormats.find((f: any) => f.qualityLabel === '480p') || 
+                     videoFormats[0]
+    }
+
+    if (!selectedFormat || !selectedFormat.url) {
+      throw new Error(`No suitable ${format} format found`)
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         data: {
-          downloadUrl: data.link || data.play || data.download_url,
-          title: data.title || 'Downloaded Video',
-          duration: data.duration,
-          thumbnail: data.thumbnail,
-          format: format
+          downloadUrl: selectedFormat.url,
+          title: data.title || 'YouTube Video',
+          duration: data.lengthSeconds ? `${Math.floor(data.lengthSeconds / 60)}:${(data.lengthSeconds % 60).toString().padStart(2, '0')}` : null,
+          thumbnail: data.thumbnail?.[0]?.url || null,
+          format: format,
+          quality: selectedFormat.qualityLabel || selectedFormat.mimeType,
+          fileSize: selectedFormat.contentLength
         }
       }),
       {
