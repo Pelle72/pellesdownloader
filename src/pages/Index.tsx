@@ -26,18 +26,22 @@ const Index: React.FC = () => {
       const result = await downloadVideo(url, format as 'video' | 'audio', apiKey, quality);
       
       if (result.success && result.data) {
-        // Save to download history
+        // Save to download history (requires authentication)
         try {
-          const platform = url.includes('tiktok') ? 'tiktok' : 'youtube';
-          await supabase.from('downloads').insert({
-            title: result.data.title,
-            url: url,
-            download_url: result.data.downloadUrl,
-            format: format,
-            quality: quality,
-            duration: result.data.duration,
-            platform: platform,
-          });
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const platform = url.includes('tiktok') ? 'tiktok' : 'youtube';
+            await supabase.from('downloads').insert({
+              user_id: user.id,
+              title: result.data.title,
+              url: url,
+              download_url: result.data.downloadUrl,
+              format: format,
+              quality: quality,
+              duration: result.data.duration,
+              platform: platform,
+            });
+          }
         } catch (dbError) {
           console.error('Error saving to history:', dbError);
           // Don't show error to user, just log it
