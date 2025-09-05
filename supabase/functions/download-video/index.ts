@@ -41,32 +41,35 @@ serve(async (req) => {
 
     console.log(`Processing ${format} download for: ${url}`)
 
-    // Extract video ID from YouTube URL
+    // Extract video ID from YouTube URL or detect TikTok
     let videoId = ''
     let platform = 'youtube'
     
     // Check if it's a TikTok URL
-    if (url.includes('tiktok.com')) {
+    if (url.includes('tiktok.com') || url.includes('vm.tiktok.com')) {
       platform = 'tiktok'
       // For TikTok, we'll use the full URL
       videoId = url
+      console.log('Detected TikTok URL')
     } else {
       // YouTube URL patterns
       const patterns = [
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-        /youtube\.com\/v\/([^&\n?#]+)/
+        /youtube\.com\/v\/([^&\n?#]+)/,
+        /youtube\.com\/shorts\/([^&\n?#]+)/
       ]
       
       for (const pattern of patterns) {
         const match = url.match(pattern)
         if (match) {
           videoId = match[1]
+          console.log('Detected YouTube URL, video ID:', videoId)
           break
         }
       }
 
       if (!videoId) {
-        throw new Error('Invalid YouTube URL. Could not extract video ID.')
+        throw new Error('Invalid URL. Please provide a valid YouTube or TikTok URL.')
       }
     }
 
