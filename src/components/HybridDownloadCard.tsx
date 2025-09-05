@@ -40,15 +40,16 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
       };
       
       setDebugInfo(debug);
+      const available = isSupabaseAvailable();
       
-      const isReady = isSupabaseAvailable();
-      setSupabaseReady(isReady);
-      
-      if (isReady && !supabaseReady) {
-        toast({
-          title: "Backend Ready!",
-          description: "Secure downloads are now available. No API key required.",
-        });
+      if (available !== supabaseReady) {
+        setSupabaseReady(available);
+        if (available) {
+          toast({
+            title: "Backend Ready",
+            description: "Secure downloads are now available!",
+          });
+        }
       }
     };
 
@@ -79,19 +80,32 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!url.trim()) {
+    // Check which URL is provided
+    const finalUrl = youtubeUrl.trim() || tiktokUrl.trim();
+    
+    if (!finalUrl) {
       toast({
         title: "URL Required",
-        description: "Please enter a YouTube URL",
+        description: "Please enter either a YouTube or TikTok URL",
         variant: "destructive",
       });
       return;
     }
 
-    if (!validateUrl(url)) {
+    // Validate the appropriate URL
+    if (youtubeUrl.trim() && !validateYouTubeUrl(youtubeUrl)) {
       toast({
-        title: "Invalid URL",
-        description: "Please enter a valid YouTube or TikTok URL",
+        title: "Invalid YouTube URL",
+        description: "Please enter a valid YouTube URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (tiktokUrl.trim() && !validateTikTokUrl(tiktokUrl)) {
+      toast({
+        title: "Invalid TikTok URL", 
+        description: "Please enter a valid TikTok URL",
         variant: "destructive",
       });
       return;
@@ -112,8 +126,10 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
       localStorage.setItem('rapidapi_key', apiKey);
     }
 
-    await onDownload(url, format, undefined, quality);
+    await onDownload(finalUrl, format, undefined, quality);
   };
+
+  const handleYouTubePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
       setYoutubeUrl(text);
@@ -159,7 +175,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
           Pelle's YouTube and TikTok grabber
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Download videos and audio from YouTube (including Shorts)
+          Download videos and audio from YouTube and TikTok (including Shorts)
           <br />
           <div className="flex items-center justify-center gap-2 mt-2">
             {supabaseReady ? (
@@ -169,7 +185,6 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
               </div>
             ) : (
               <div className="flex items-center gap-1 text-yellow-400">
-                <Key className="w-3 h-3" />
                 <span className="text-xs">API key required</span>
               </div>
             )}
@@ -203,44 +218,22 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
             </div>
           )}
 
-          {/* Backend Status */}
-          {supabaseReady ? (
-            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <div className="flex items-center gap-2 text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Secure Backend Active</span>
-              </div>
-              <p className="text-xs text-green-300/70 mt-1">
-                Your downloads are processed securely without exposing your API key
-              </p>
-            </div>
-          ) : (
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-              <div className="flex items-center gap-2 text-yellow-400">
-                <Key className="w-4 h-4" />
-                <span className="text-sm font-medium">Configuring Backend...</span>
-              </div>
-              <div className="text-xs text-yellow-300/70 mt-1 space-y-1">
-                <p>Status: URL {debugInfo?.urlExists ? '✅' : '❌'} | Key {debugInfo?.keyExists ? '✅' : '❌'}</p>
-                <p>Last check: {debugInfo?.timestamp}</p>
-                {!debugInfo?.urlExists && <p>⏳ Waiting for Supabase environment variables...</p>}
-              </div>
-            </div>
-          )}
-
-          {/* URL Input */}
+          {/* YouTube URL Input */}
           <div className="space-y-2">
-            <Label htmlFor="url" className="text-sm font-medium">
-              YouTube or TikTok url
+            <Label htmlFor="youtubeUrl" className="text-sm font-medium">
+              YouTube URL
             </Label>
             <div className="relative">
               <Link className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                id="url"
+                id="youtubeUrl"
                 type="url"
-                placeholder="Paste youtube or TikTok link"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                placeholder="Paste YouTube link here"
+                value={youtubeUrl}
+                onChange={(e) => {
+                  setYoutubeUrl(e.target.value);
+                  if (e.target.value) setTiktokUrl(""); // Clear TikTok field
+                }}
                 className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                 disabled={isLoading}
               />
@@ -248,8 +241,40 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={handlePaste}
-                className="absolute right-2 top-2 h-8 text-xs"
+                className="absolute right-2 top-2 h-8 px-2"
+                onClick={handleYouTubePaste}
+                disabled={isLoading}
+              >
+                Paste
+              </Button>
+            </div>
+          </div>
+
+          {/* TikTok URL Input */}
+          <div className="space-y-2">
+            <Label htmlFor="tiktokUrl" className="text-sm font-medium">
+              TikTok URL
+            </Label>
+            <div className="relative">
+              <Music className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="tiktokUrl"
+                type="url"
+                placeholder="Paste TikTok link here"
+                value={tiktokUrl}
+                onChange={(e) => {
+                  setTiktokUrl(e.target.value);
+                  if (e.target.value) setYoutubeUrl(""); // Clear YouTube field
+                }}
+                className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
+                disabled={isLoading}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-2 h-8 px-2"
+                onClick={handleTikTokPaste}
                 disabled={isLoading}
               >
                 Paste
@@ -336,27 +361,23 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
 
         {/* Download Result */}
         {downloadResult && (
-          <div className="mt-6 p-4 bg-secondary/30 rounded-lg border border-border/50">
+          <div className="mt-6 p-4 bg-secondary/50 rounded-lg border border-border/50">
             {downloadResult.success && downloadResult.data ? (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <Download className="w-4 h-4" />
-                  Ready to Download
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Ready to Download!</span>
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm">
                   <p className="font-medium">{downloadResult.data.title}</p>
                   {downloadResult.data.duration && (
-                    <p>Duration: {downloadResult.data.duration}</p>
+                    <p className="text-muted-foreground">Duration: {downloadResult.data.duration}</p>
                   )}
                 </div>
-                <Button 
-                  onClick={() => downloadResult.data && triggerDownload(
-                    downloadResult.data.downloadUrl, 
-                    `${downloadResult.data.title}.${format === 'audio' ? 'mp3' : 'mp4'}`
-                  )}
-                  variant="hero"
-                  size="sm"
+                <Button
+                  onClick={() => triggerDownload(downloadResult.data!.downloadUrl, downloadResult.data!.title)}
                   className="w-full"
+                  variant="default"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Download File
