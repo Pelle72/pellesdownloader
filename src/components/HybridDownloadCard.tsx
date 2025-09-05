@@ -209,7 +209,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
           {/* URL Input */}
           <div className="space-y-2">
             <Label htmlFor="url" className="text-sm font-medium">
-              YouTube URL (Videos & Shorts)
+              YouTube or TikTok url
             </Label>
             <div className="relative">
               <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
