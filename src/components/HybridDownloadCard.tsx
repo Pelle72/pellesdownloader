@@ -15,7 +15,8 @@ interface HybridDownloadCardProps {
 }
 
 export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResult }: HybridDownloadCardProps) => {
-  const [url, setUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
   const [format, setFormat] = useState<"video" | "audio">("video");
   const [quality, setQuality] = useState("best");
   const [apiKey, setApiKey] = useState("");
@@ -65,11 +66,14 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
     }
   }, []);
 
-  const validateUrl = (input: string) => {
+  const validateYouTubeUrl = (input: string) => {
     const youtubeRegex = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com\/(watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/).+/;
+    return youtubeRegex.test(input);
+  };
+
+  const validateTikTokUrl = (input: string) => {
     const tiktokRegex = /tiktok/i;
-    
-    return youtubeRegex.test(input) || tiktokRegex.test(input);
+    return tiktokRegex.test(input);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,19 +114,36 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
 
     await onDownload(url, format, undefined, quality);
   };
-
-  const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      setUrl(text);
+      setYoutubeUrl(text);
+      setTiktokUrl(""); // Clear the other field
       toast({
-        title: "URL Pasted",
+        title: "YouTube URL Pasted",
         description: "Link pasted from clipboard",
       });
     } catch (err) {
       toast({
-        title: "Paste Failed",
-        description: "Could not access clipboard",
+        title: "Paste Error",
+        description: "Could not paste from clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTikTokPaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setTiktokUrl(text);
+      setYoutubeUrl(""); // Clear the other field
+      toast({
+        title: "TikTok URL Pasted",
+        description: "Link pasted from clipboard",
+      });
+    } catch (err) {
+      toast({
+        title: "Paste Error",
+        description: "Could not paste from clipboard",
         variant: "destructive",
       });
     }
@@ -297,7 +318,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
             variant="hero"
             size="lg"
             className="w-full h-12"
-            disabled={isLoading || !url.trim() || (!supabaseReady && !apiKey.trim())}
+            disabled={isLoading || (!youtubeUrl.trim() && !tiktokUrl.trim()) || (!supabaseReady && !apiKey.trim())}
           >
             {isLoading ? (
               <>
