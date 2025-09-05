@@ -155,8 +155,8 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
       
       <CardContent className="space-y-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* API Key Input - only show if Supabase is not ready */}
-          {!supabaseReady && (
+          {/* API Key Input - always show since environment variables aren't accessible */}
+          {true && (
             <div className="space-y-2">
               <Label htmlFor="apiKey" className="text-sm font-medium">
                 RapidAPI Key
