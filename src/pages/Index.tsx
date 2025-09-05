@@ -37,12 +37,14 @@ const Index = () => {
         setDownloadResult(result);
       }
     } catch (error) {
+      console.error('Download error:', error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: errorMessage,
         variant: "destructive",
       });
-      setDownloadResult({ success: false, error: "An unexpected error occurred" });
+      setDownloadResult({ success: false, error: errorMessage });
     } finally {
       setIsDownloading(false);
     }

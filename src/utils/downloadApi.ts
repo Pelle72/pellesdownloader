@@ -3,7 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Create client with fallback to avoid startup errors
+const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
 
 export interface DownloadResult {
   success: boolean
@@ -19,6 +22,13 @@ export interface DownloadResult {
 
 export const downloadVideo = async (url: string, format: 'video' | 'audio'): Promise<DownloadResult> => {
   try {
+    if (!supabase) {
+      return {
+        success: false,
+        error: 'Supabase not configured. Please check your environment variables.'
+      }
+    }
+
     const { data, error } = await supabase.functions.invoke('download-video', {
       body: { url, format }
     })
