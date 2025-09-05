@@ -9,7 +9,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const App: React.FC = () => {
   // Register service worker for PWA
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -24,8 +24,6 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -33,10 +31,11 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        <Toaster />
+        <Sonner />
       </TooltipProvider>
     </QueryClientProvider>
   );
-
 };
 
 export default App;

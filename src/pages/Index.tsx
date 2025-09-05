@@ -7,7 +7,7 @@ import { downloadVideo } from "@/utils/hybridDownloadApi";
 import { supabase } from "@/integrations/supabase/client";
 import { Youtube, History } from "lucide-react";
 
-const Index = () => {
+const Index: React.FC = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadResult, setDownloadResult] = useState(null);
   const [showFileManager, setShowFileManager] = useState(false);
