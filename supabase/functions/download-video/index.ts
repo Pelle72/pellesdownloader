@@ -71,7 +71,7 @@ serve(async (req) => {
 
       if (!videoId) {
         console.error('❌ Could not extract YouTube video ID from:', url)
-        throw new Error('Invalid YouTube URL. Could not extract video ID.')
+        throw new Error('Invalid URL. Could not extract YouTube video ID.')
       }
     } else {
       console.error('❌ URL not recognized as YouTube or TikTok:', url)
