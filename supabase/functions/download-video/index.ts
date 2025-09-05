@@ -12,19 +12,23 @@ serve(async (req) => {
   try {
     const { url, format } = await req.json()
     
+    console.log('=== DEBUG INFO ===')
+    console.log('URL:', url)
+    console.log('Format:', format)
+    
+    // Check environment variables
+    const rapidApiKey = Deno.env.get('RAPIDAPI_KEY')
+    console.log('RAPIDAPI_KEY found:', !!rapidApiKey)
+    console.log('RAPIDAPI_KEY length:', rapidApiKey ? rapidApiKey.length : 0)
+    console.log('RAPIDAPI_KEY first 10 chars:', rapidApiKey ? rapidApiKey.substring(0, 10) + '...' : 'N/A')
+    
     if (!url) {
       throw new Error('URL is required')
     }
 
-    const rapidApiKey = Deno.env.get('RAPIDAPI_KEY')
-    console.log('Environment check:')
-    console.log('- RAPIDAPI_KEY exists:', !!rapidApiKey)
-    console.log('- RAPIDAPI_KEY length:', rapidApiKey ? rapidApiKey.length : 0)
-    console.log('- All env vars:', Object.keys(Deno.env.toObject()))
-    
     if (!rapidApiKey) {
-      console.error('RapidAPI key not found in environment')
-      throw new Error('RapidAPI key not configured')
+      console.error('❌ RapidAPI key not found in environment variables')
+      throw new Error('RapidAPI key not configured in Supabase secrets')
     }
 
     console.log(`Processing ${format} download for: ${url}`)
