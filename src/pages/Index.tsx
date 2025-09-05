@@ -11,20 +11,27 @@ const Index = () => {
   const handleDownload = async (url: string, format: string) => {
     setIsDownloading(true);
     
-    // Simulate download process (in real app, this would call your backend)
+    // Demo simulation - in production this would call your backend API
     toast({
-      title: "Download Started",
-      description: `Starting ${format} download...`,
+      title: "Demo Mode",
+      description: "This is a demo interface. Real downloads require backend integration.",
     });
 
-    // Simulate processing time
+    // Simulate more realistic download process
+    setTimeout(() => {
+      toast({
+        title: "Processing Video",
+        description: "Analyzing video metadata...",
+      });
+    }, 1000);
+
     setTimeout(() => {
       setIsDownloading(false);
       toast({
-        title: "Download Complete",
-        description: `Your ${format} has been processed successfully!`,
+        title: "Demo Complete",
+        description: `Demo ${format} processing finished. Integrate with yt-dlp or similar for real downloads.`,
       });
-    }, 3000);
+    }, 4000);
   };
 
   return (

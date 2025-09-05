@@ -75,6 +75,8 @@ export const DownloadCard = ({ onDownload, isLoading = false }: DownloadCardProp
         </CardTitle>
         <CardDescription className="text-muted-foreground">
           Download videos from YouTube and TikTok
+          <br />
+          <span className="text-xs text-primary/70 mt-1 block">⚠️ Demo version - No actual downloads</span>
         </CardDescription>
       </CardHeader>
       
