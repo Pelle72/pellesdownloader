@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { DownloadCard } from "@/components/DownloadCard";
 import { FeatureGrid } from "@/components/FeatureGrid";
+import { SupabaseStatusChecker } from "@/components/SupabaseStatusChecker";
 import { useToast } from "@/hooks/use-toast";
 import { downloadVideo } from "@/utils/downloadApi";
 import { Youtube, Clock, CheckCircle } from "lucide-react";
@@ -67,6 +68,11 @@ const Index = () => {
               Download videos and audio from YouTube and TikTok instantly. 
               Fast, secure, and mobile-friendly.
             </p>
+          </div>
+
+          {/* Supabase Status */}
+          <div className="mb-8 max-w-md mx-auto">
+            <SupabaseStatusChecker />
           </div>
 
           {/* Download Card */}
