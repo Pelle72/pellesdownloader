@@ -72,8 +72,6 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Debug element */}
-      <div className="p-4 text-white bg-red-500">DEBUG: App is loading</div>
       {/* Hero Section */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary-glow/10" />
