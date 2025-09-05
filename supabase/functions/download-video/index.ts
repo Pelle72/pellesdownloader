@@ -17,7 +17,10 @@ serve(async (req) => {
     }
 
     const rapidApiKey = Deno.env.get('RAPIDAPI_KEY')
+    console.log('RapidAPI Key status:', rapidApiKey ? 'Available' : 'Missing')
+    
     if (!rapidApiKey) {
+      console.error('RapidAPI key not configured')
       throw new Error('RapidAPI key not configured')
     }
 
