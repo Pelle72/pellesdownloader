@@ -77,15 +77,11 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
       "transition-opacity duration-500",
       isVisible ? "opacity-100" : "opacity-0"
     )}>
-      {/* Background forest effect */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-70"
-        style={{
-          backgroundImage: `url('/lovable-uploads/811f3234-7612-49e5-abe6-352960330de9.png')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center"
-        }}
-      />
+      {/* Mystical forest background effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-900/40 via-green-700/30 to-emerald-900/50" />
+      
+      {/* Animated forest silhouettes */}
+      <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
       
       {/* Dark overlay for better text visibility */}
       <div className="absolute inset-0 bg-black/40" />
