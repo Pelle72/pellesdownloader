@@ -12,15 +12,29 @@ const initializeSupabase = (): SupabaseClient | null => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+  console.log('🔍 Supabase Environment Check:', {
+    'URL exists': !!supabaseUrl,
+    'URL value': supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'undefined',
+    'Key exists': !!supabaseAnonKey,
+    'Key length': supabaseAnonKey ? supabaseAnonKey.length : 0,
+    'Environment': import.meta.env.MODE
+  })
+
   if (supabaseUrl && supabaseAnonKey && supabaseUrl.trim() && supabaseAnonKey.trim()) {
     try {
       supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
       console.log('✅ Supabase client initialized successfully')
+      console.log('🔗 Supabase URL:', supabaseUrl.substring(0, 30) + '...')
       return supabaseClient
     } catch (error) {
       console.error('❌ Failed to initialize Supabase client:', error)
       return null
     }
+  } else {
+    console.log('❌ Supabase environment variables not available:', {
+      url: !!supabaseUrl,
+      key: !!supabaseAnonKey
+    })
   }
 
   return null
