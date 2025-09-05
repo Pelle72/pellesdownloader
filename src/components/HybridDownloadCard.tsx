@@ -67,7 +67,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
 
   const validateUrl = (input: string) => {
     const youtubeRegex = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com\/(watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/).+/;
-    const tiktokRegex = /^(https?:\/\/)?(www\.|m\.)?(tiktok\.com|vm\.tiktok\.com).+/;
+    const tiktokRegex = /(tiktok\.com|vm\.tiktok\.com)/;
     return youtubeRegex.test(input) || tiktokRegex.test(input);
   };
 
