@@ -3,22 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Download, Share, Trash2, ExternalLink, FileVideo, Music, Calendar, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { getDownloadHistory, removeFromDownloadHistory, clearDownloadHistory, LocalDownload } from "@/utils/localStorageHistory";
 
-interface Download {
-  id: string;
-  title: string;
-  url: string;
-  download_url: string;
-  format: string;
-  quality?: string;
-  file_size?: number;
-  duration?: string;
-  platform: string;
-  downloaded_at: string;
-}
 
 interface FileManagerProps {
   isOpen: boolean;
@@ -26,7 +14,7 @@ interface FileManagerProps {
 }
 
 export const FileManager = ({ isOpen, onClose }: FileManagerProps) => {
-  const [downloads, setDownloads] = useState<Download[]>([]);
+  const [downloads, setDownloads] = useState<LocalDownload[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -36,16 +24,11 @@ export const FileManager = ({ isOpen, onClose }: FileManagerProps) => {
     }
   }, [isOpen]);
 
-  const fetchDownloads = async () => {
+  const fetchDownloads = () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('downloads')
-        .select('*')
-        .order('downloaded_at', { ascending: false });
-
-      if (error) throw error;
-      setDownloads(data || []);
+      const history = getDownloadHistory();
+      setDownloads(history);
     } catch (error) {
       console.error('Error fetching downloads:', error);
       toast({
@@ -58,15 +41,9 @@ export const FileManager = ({ isOpen, onClose }: FileManagerProps) => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     try {
-      const { error } = await supabase
-        .from('downloads')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      removeFromDownloadHistory(id);
       setDownloads(downloads.filter(d => d.id !== id));
       toast({
         title: "Deleted",
@@ -82,7 +59,7 @@ export const FileManager = ({ isOpen, onClose }: FileManagerProps) => {
     }
   };
 
-  const handleShare = async (download: Download) => {
+  const handleShare = async (download: LocalDownload) => {
     try {
       if (navigator.share) {
         await navigator.share({
@@ -108,7 +85,7 @@ export const FileManager = ({ isOpen, onClose }: FileManagerProps) => {
     }
   };
 
-  const handleDownload = (download: Download) => {
+  const handleDownload = (download: LocalDownload) => {
     // Trigger download
     const link = document.createElement('a');
     link.href = download.download_url;
@@ -125,15 +102,9 @@ export const FileManager = ({ isOpen, onClose }: FileManagerProps) => {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const clearAllHistory = async () => {
+  const clearAllHistory = () => {
     try {
-      const { error } = await supabase
-        .from('downloads')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
-
-      if (error) throw error;
-
+      clearDownloadHistory();
       setDownloads([]);
       toast({
         title: "History cleared",

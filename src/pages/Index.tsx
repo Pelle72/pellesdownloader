@@ -4,7 +4,7 @@ import { HybridDownloadCard } from "@/components/HybridDownloadCard";
 import { FileManager } from "@/components/FileManager";
 import { useToast } from "@/hooks/use-toast";
 import { downloadVideo } from "@/utils/hybridDownloadApi";
-import { supabase } from "@/integrations/supabase/client";
+import { addToDownloadHistory } from "@/utils/localStorageHistory";
 import { Youtube, History } from "lucide-react";
 
 const Index: React.FC = () => {
@@ -26,24 +26,20 @@ const Index: React.FC = () => {
       const result = await downloadVideo(url, format as 'video' | 'audio', apiKey, quality);
       
       if (result.success && result.data) {
-        // Save to download history (requires authentication)
+        // Save to download history in local storage
         try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const platform = url.includes('tiktok') ? 'tiktok' : 'youtube';
-            await supabase.from('downloads').insert({
-              user_id: user.id,
-              title: result.data.title,
-              url: url,
-              download_url: result.data.downloadUrl,
-              format: format,
-              quality: quality,
-              duration: result.data.duration,
-              platform: platform,
-            });
-          }
-        } catch (dbError) {
-          console.error('Error saving to history:', dbError);
+          const platform = url.includes('tiktok') ? 'tiktok' : 'youtube';
+          addToDownloadHistory({
+            title: result.data.title,
+            url: url,
+            download_url: result.data.downloadUrl,
+            format: format,
+            quality: quality,
+            duration: result.data.duration,
+            platform: platform,
+          });
+        } catch (storageError) {
+          console.error('Error saving to history:', storageError);
           // Don't show error to user, just log it
         }
 
