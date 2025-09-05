@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { SimpleDownloadCard } from "@/components/SimpleDownloadCard";
+import { HybridDownloadCard } from "@/components/HybridDownloadCard";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { useToast } from "@/hooks/use-toast";
-import { downloadVideo } from "@/utils/simpleDownloadApi";
+import { downloadVideo } from "@/utils/hybridDownloadApi";
 import { Youtube, Clock, CheckCircle } from "lucide-react";
 
 const Index = () => {
@@ -10,7 +10,7 @@ const Index = () => {
   const [downloadResult, setDownloadResult] = useState(null);
   const { toast } = useToast();
 
-  const handleDownload = async (url: string, format: string, apiKey: string) => {
+  const handleDownload = async (url: string, format: string, apiKey?: string) => {
     setIsDownloading(true);
     setDownloadResult(null);
     
@@ -71,7 +71,7 @@ const Index = () => {
 
           {/* Download Card */}
           <div className="mb-16">
-            <SimpleDownloadCard onDownload={handleDownload} isLoading={isDownloading} downloadResult={downloadResult} />
+            <HybridDownloadCard onDownload={handleDownload} isLoading={isDownloading} downloadResult={downloadResult} />
           </div>
 
           {/* Quick Stats */}
