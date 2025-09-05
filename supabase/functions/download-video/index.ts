@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { url, format } = await req.json()
+    const { url, format, apiKey } = await req.json()
     
     if (!url) {
       throw new Error('URL is required')
@@ -24,24 +24,21 @@ serve(async (req) => {
     console.log('=== DEBUG INFO ===')
     console.log('URL:', url)
     console.log('Format:', format)
+    console.log('API Key provided:', !!apiKey)
     
     // Check environment variables
     const rapidApiKey = Deno.env.get('RAPIDAPI_KEY')
-    console.log('RAPIDAPI_KEY found:', !!rapidApiKey)
+    console.log('RAPIDAPI_KEY found in env:', !!rapidApiKey)
     
-    // Also try alternative environment variable names that might be used
-    const rapidApiKey2 = Deno.env.get('RAPID_API_KEY')
-    const rapidApiKey3 = Deno.env.get('rapidapi_key')
-    console.log('Checking alternative names:')
-    console.log('RAPID_API_KEY found:', !!rapidApiKey2) 
-    console.log('rapidapi_key found:', !!rapidApiKey3)
+    // Use provided API key or environment variable
+    const finalKey = apiKey || rapidApiKey
     
-    if (!rapidApiKey && !rapidApiKey2 && !rapidApiKey3) {
-      console.error('❌ RapidAPI key not found in any format')
-      throw new Error('RapidAPI key not configured in Supabase secrets')
+    if (!finalKey) {
+      console.error('❌ No RapidAPI key available')
+      throw new Error('RapidAPI key required either as parameter or environment variable')
     }
     
-    const finalKey = rapidApiKey || rapidApiKey2 || rapidApiKey3
+    console.log('Using API key from:', apiKey ? 'parameter' : 'environment')
 
     console.log(`Processing ${format} download for: ${url}`)
 

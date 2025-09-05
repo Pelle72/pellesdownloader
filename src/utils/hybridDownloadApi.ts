@@ -61,7 +61,7 @@ export const downloadVideo = async (url: string, format: 'video' | 'audio', apiK
       console.log('🚀 Using Supabase edge function for download')
       
       const { data, error } = await supabase.functions.invoke('download-video', {
-        body: { url, format }
+        body: { url, format, apiKey }
       })
 
       if (error) {
