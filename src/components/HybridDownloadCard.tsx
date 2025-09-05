@@ -19,11 +19,26 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
   const [format, setFormat] = useState("video");
   const [apiKey, setApiKey] = useState("");
   const [supabaseReady, setSupabaseReady] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     // Check Supabase availability every 5 seconds
     const checkSupabase = () => {
+      // Get environment info for debugging
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const debug = {
+        urlExists: !!supabaseUrl,
+        keyExists: !!supabaseKey,
+        urlPreview: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'Not found',
+        keyLength: supabaseKey ? supabaseKey.length : 0,
+        timestamp: new Date().toLocaleTimeString()
+      };
+      
+      setDebugInfo(debug);
+      
       const isReady = isSupabaseAvailable();
       setSupabaseReady(isReady);
       
@@ -165,7 +180,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
           )}
 
           {/* Backend Status */}
-          {supabaseReady && (
+          {supabaseReady ? (
             <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
               <div className="flex items-center gap-2 text-green-400">
                 <CheckCircle className="w-4 h-4" />
@@ -174,6 +189,18 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
               <p className="text-xs text-green-300/70 mt-1">
                 Your downloads are processed securely without exposing your API key
               </p>
+            </div>
+          ) : (
+            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <div className="flex items-center gap-2 text-yellow-400">
+                <Key className="w-4 h-4" />
+                <span className="text-sm font-medium">Configuring Backend...</span>
+              </div>
+              <div className="text-xs text-yellow-300/70 mt-1 space-y-1">
+                <p>Status: URL {debugInfo?.urlExists ? '✅' : '❌'} | Key {debugInfo?.keyExists ? '✅' : '❌'}</p>
+                <p>Last check: {debugInfo?.timestamp}</p>
+                {!debugInfo?.urlExists && <p>⏳ Waiting for Supabase environment variables...</p>}
+              </div>
             </div>
           )}
 
