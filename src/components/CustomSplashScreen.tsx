@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSettings } from '@/contexts/SettingsContext';
 
 interface CustomSplashScreenProps {
@@ -12,13 +12,19 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [audioPlayed, setAudioPlayed] = useState(false);
-  const { musicEnabled } = useSettings();
+  const { musicEnabled, registerAudio, unregisterAudio } = useSettings();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     // Play intro sound if provided and music is enabled
     if (audioUrl && !audioPlayed && musicEnabled) {
       const audio = new Audio(audioUrl);
       audio.volume = 0.5; // Set volume to 50%
+      audio.muted = !musicEnabled;
+      audioRef.current = audio;
+      
+      // Register audio with settings context
+      registerAudio(audio);
       
       // Try to play audio (user interaction might be required)
       audio.play().catch((error) => {
@@ -35,10 +41,23 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
       setTimeout(onComplete, 500); // Allow fade out animation
     }, 3000);
 
-    return () => clearTimeout(timer);
-  }, [onComplete, audioUrl, audioPlayed, musicEnabled]);
+    return () => {
+      clearTimeout(timer);
+      // Cleanup audio registration
+      if (audioRef.current) {
+        unregisterAudio(audioRef.current);
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [onComplete, audioUrl, audioPlayed, musicEnabled, registerAudio, unregisterAudio]);
 
   const handleSkip = () => {
+    // Stop audio when skipping
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setIsVisible(false);
     setTimeout(onComplete, 500);
   };
