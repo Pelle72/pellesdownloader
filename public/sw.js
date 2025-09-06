@@ -14,12 +14,18 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Skip caching for API calls and dynamic content
+  if (event.request.url.includes('/api') || 
+      event.request.url.includes('supabase') ||
+      event.request.method !== 'GET') {
+    return;
+  }
+  
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      })
+    fetch(event.request).catch(() => {
+      // Only return cached version if network fails
+      return caches.match(event.request);
+    })
   );
 });
 
