@@ -9,7 +9,9 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { CustomSplashScreen } from "./components/CustomSplashScreen";
 import { SettingsProvider } from "./contexts/SettingsContext";
+import { SpookyMusicProvider } from "./contexts/SpookyMusicContext";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { SpookyMusicToggle } from "./components/SpookyMusicToggle";
 
 const queryClient = new QueryClient();
 
@@ -30,26 +32,28 @@ const App: React.FC = () => {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <SettingsProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            {showSplash && (
-              <CustomSplashScreen 
-                onComplete={() => setShowSplash(false)}
-                audioUrl="/intro-sound.mp3"
-              />
-            )}
-            <SettingsPanel />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </QueryClientProvider>
+        <SpookyMusicProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              {showSplash && (
+                <CustomSplashScreen 
+                  onComplete={() => setShowSplash(false)}
+                />
+              )}
+              <SettingsPanel />
+              <SpookyMusicToggle />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </SpookyMusicProvider>
       </SettingsProvider>
     </ThemeProvider>
   );

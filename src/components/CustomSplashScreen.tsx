@@ -1,65 +1,15 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useSettings } from '@/contexts/SettingsContext';
+import React, { useEffect, useState } from 'react';
 
 interface CustomSplashScreenProps {
   onComplete: () => void;
-  audioUrl?: string;
 }
 
 export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ 
-  onComplete, 
-  audioUrl = '/intro-sound.mp3' 
+  onComplete
 }) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [audioPlayed, setAudioPlayed] = useState(false);
-  const { musicEnabled, registerAudio, unregisterAudio } = useSettings();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    let audio: HTMLAudioElement | null = null;
-
-    const initializeAudio = async () => {
-      if (audioUrl && !audioPlayed) {
-        try {
-          audio = new Audio(audioUrl);
-          audio.volume = 0.5;
-          audio.loop = false;
-          audioRef.current = audio;
-          
-          // Register audio with settings context
-          registerAudio(audio);
-          
-          console.log('Attempting to play audio immediately:', audioUrl);
-          await audio.play();
-          console.log('Audio started successfully');
-          
-          setAudioPlayed(true);
-        } catch (error) {
-          console.log('Audio autoplay blocked, will play on user interaction:', error);
-          
-          // Add click handler to play on first user interaction
-          const playOnClick = async () => {
-            if (audio) {
-              try {
-                await audio.play();
-                console.log('Audio playing after user interaction');
-                setAudioPlayed(true);
-              } catch (err) {
-                console.log('Audio still failed after click:', err);
-              }
-            }
-            document.removeEventListener('click', playOnClick);
-          };
-          
-          document.addEventListener('click', playOnClick, { once: true });
-          setAudioPlayed(true); // Mark as attempted
-        }
-      }
-    };
-
-    // Initialize audio immediately when component mounts
-    initializeAudio();
-
     // Auto-hide splash screen after 3 seconds
     const timer = setTimeout(() => {
       setIsVisible(false);
@@ -68,34 +18,10 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
 
     return () => {
       clearTimeout(timer);
-      if (audioRef.current) {
-        unregisterAudio(audioRef.current);
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      document.removeEventListener('click', () => {});
     };
-  }, [onComplete, audioUrl, audioPlayed, registerAudio, unregisterAudio]);
-
-  // Handle mute button separately - only affects volume, not initial play
-  useEffect(() => {
-    if (audioRef.current) {
-      if (musicEnabled) {
-        audioRef.current.muted = false;
-        console.log('Audio unmuted');
-      } else {
-        audioRef.current.muted = true;
-        console.log('Audio muted');
-      }
-    }
-  }, [musicEnabled]);
+  }, [onComplete]);
 
   const handleSkip = () => {
-    // Stop audio when skipping
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
     setIsVisible(false);
     setTimeout(onComplete, 500);
   };
