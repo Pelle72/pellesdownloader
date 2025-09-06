@@ -47,41 +47,30 @@ export const WitchCharacter: React.FC<{ position: 'left' | 'right' }> = ({ posit
 export const ChickenNuggetCharacter: React.FC<{ position: 'corner' | 'side' }> = ({ position }) => {
   const isCorner = position === 'corner';
   
+  // Use different characters for different positions
+  const characterImage = isCorner 
+    ? '/lovable-uploads/bf92ac89-4f90-4ead-bb49-152b90e4af8a.png' // Bunny character
+    : '/lovable-uploads/7f74ba46-da6e-4373-b5d5-4750cf7fe854.png'; // Yellow chick character
+  
   return (
     <div className={`fixed ${isCorner ? 'bottom-4 left-4' : 'bottom-1/4 right-8'} z-10 pointer-events-none`}>
-      <div className="relative animate-pulse">
-        {/* Nugget Body */}
-        <div className="w-14 h-10 bg-gradient-to-br from-yellow-600 via-orange-500 to-yellow-700 rounded-2xl relative shadow-lg">
-          {/* Crispy texture bumps */}
-          <div className="absolute top-1 left-2 w-2 h-2 bg-yellow-500 rounded-full"></div>
-          <div className="absolute top-3 right-2 w-1.5 h-1.5 bg-orange-400 rounded-full"></div>
-          <div className="absolute bottom-2 left-3 w-1 h-1 bg-yellow-400 rounded-full"></div>
-          <div className="absolute bottom-1 right-3 w-1.5 h-1.5 bg-orange-600 rounded-full"></div>
-          
-          {/* Eyes */}
-          <div className="absolute top-2 left-4 w-2 h-2 bg-black rounded-full">
-            <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full"></div>
-          </div>
-          <div className="absolute top-2 right-4 w-2 h-2 bg-black rounded-full">
-            <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full"></div>
-          </div>
-          
-          {/* Beak */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-2 h-1 bg-orange-600 rounded-sm"></div>
-          
-          {/* Smile */}
-          <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-orange-700 rounded-full"></div>
-        </div>
+      <div className="relative animate-bounce">
+        {/* Chikn Nuggit Character */}
+        <img 
+          src={characterImage}
+          alt="Chikn Nuggit Character"
+          className="w-20 h-20 object-contain drop-shadow-lg"
+          onError={(e) => {
+            // Fallback if image fails to load
+            e.currentTarget.style.display = 'none';
+          }}
+        />
         
-        {/* Tiny wings */}
-        <div className="absolute -left-1 top-3 w-3 h-4 bg-yellow-500 rounded-l-full opacity-80"></div>
-        <div className="absolute -right-1 top-3 w-3 h-4 bg-yellow-500 rounded-r-full opacity-80"></div>
-        
-        {/* Crumbs */}
+        {/* Floating hearts/sparkles around characters */}
         <div className={`absolute ${isCorner ? '-top-3 left-8' : '-top-2 -left-4'} space-x-1 space-y-1`}>
-          <div className="w-1 h-1 bg-yellow-600 rounded-full inline-block animate-bounce"></div>
-          <div className="w-0.5 h-0.5 bg-orange-500 rounded-full inline-block animate-bounce delay-75"></div>
-          <div className="w-1 h-1 bg-yellow-500 rounded-full inline-block animate-bounce delay-150"></div>
+          <div className="w-2 h-2 text-pink-400 animate-pulse inline-block">💫</div>
+          <div className="w-2 h-2 text-yellow-400 animate-bounce delay-75 inline-block">✨</div>
+          <div className="w-2 h-2 text-purple-400 animate-ping delay-150 inline-block">💖</div>
         </div>
       </div>
     </div>
