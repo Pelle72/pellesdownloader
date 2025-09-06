@@ -36,13 +36,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const handleMusicToggle = (enabled: boolean) => {
     setMusicEnabled(enabled);
     
-    // Mute/unmute all registered audio elements
+    // Apply mute/unmute to all registered audio elements
     audioElementsRef.current.forEach(audio => {
+      audio.muted = !enabled; // When enabled=true, muted=false (play sound)
+      
       if (!enabled) {
+        // When disabled (muted), pause the audio
         audio.pause();
-        audio.currentTime = 0;
+      } else {
+        // When enabled (unmuted), try to resume if audio exists
+        if (audio.paused && audio.currentTime > 0) {
+          audio.play().catch(console.log);
+        }
       }
-      audio.muted = !enabled;
     });
   };
 
