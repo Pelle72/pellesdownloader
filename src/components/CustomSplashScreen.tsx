@@ -10,10 +10,15 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    console.log('Splash screen mounted');
     // Auto-hide splash screen after 3 seconds
     const timer = setTimeout(() => {
+      console.log('Hiding splash screen');
       setIsVisible(false);
-      setTimeout(onComplete, 500);
+      setTimeout(() => {
+        console.log('Calling onComplete');
+        onComplete();
+      }, 500);
     }, 3000);
 
     return () => {
