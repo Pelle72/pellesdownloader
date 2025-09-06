@@ -16,57 +16,70 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Play intro sound if provided and music is enabled
-    if (audioUrl && !audioPlayed) {
-      const audio = new Audio(audioUrl);
-      audio.volume = 0.5; // Set volume to 50%
-      audioRef.current = audio;
-      
-      // Register audio with settings context
-      registerAudio(audio);
-      
-      // Only play if music is enabled
-      if (musicEnabled) {
-        audio.play().catch((error) => {
-          console.log('Audio autoplay blocked:', error);
-          // Audio will play on first user interaction
-        });
+    let audio: HTMLAudioElement | null = null;
+
+    const playAudio = async () => {
+      if (audioUrl && musicEnabled && !audioPlayed) {
+        try {
+          audio = new Audio(audioUrl);
+          audio.volume = 0.5;
+          audio.loop = false;
+          audioRef.current = audio;
+          
+          console.log('Attempting to play audio:', audioUrl);
+          await audio.play();
+          console.log('Audio playing successfully');
+          
+          registerAudio(audio);
+          setAudioPlayed(true);
+        } catch (error) {
+          console.log('Audio failed to play:', error);
+          // Add click handler to document to play on first user interaction
+          const playOnClick = async () => {
+            if (audio && musicEnabled) {
+              try {
+                await audio.play();
+                console.log('Audio playing after user interaction');
+                document.removeEventListener('click', playOnClick);
+              } catch (err) {
+                console.log('Audio still failed after click:', err);
+              }
+            }
+          };
+          document.addEventListener('click', playOnClick, { once: true });
+        }
       }
-      
-      setAudioPlayed(true);
-    }
+    };
+
+    // Start playing audio immediately
+    playAudio();
 
     // Auto-hide splash screen after 3 seconds
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onComplete, 500); // Allow fade out animation
+      setTimeout(onComplete, 500);
     }, 3000);
 
     return () => {
       clearTimeout(timer);
-      // Cleanup audio registration on unmount only
       if (audioRef.current) {
         unregisterAudio(audioRef.current);
         audioRef.current.pause();
         audioRef.current = null;
       }
     };
-  }, [onComplete, audioUrl, audioPlayed, registerAudio, unregisterAudio]);
+  }, [onComplete, audioUrl, musicEnabled, audioPlayed, registerAudio, unregisterAudio]);
 
-  // Separate effect to handle music enabled changes
+  // Handle mute/unmute
   useEffect(() => {
     if (audioRef.current) {
       if (musicEnabled) {
         audioRef.current.muted = false;
-        // Try to resume if paused
         if (audioRef.current.paused) {
-          audioRef.current.play().catch((error) => {
-            console.log('Resume audio blocked:', error);
-          });
+          audioRef.current.play().catch(console.log);
         }
       } else {
         audioRef.current.muted = true;
-        audioRef.current.pause();
       }
     }
   }, [musicEnabled]);
