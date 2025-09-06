@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface CustomSplashScreenProps {
   onComplete: () => void;
@@ -11,10 +12,11 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [audioPlayed, setAudioPlayed] = useState(false);
+  const { musicEnabled } = useSettings();
 
   useEffect(() => {
-    // Play intro sound if provided
-    if (audioUrl && !audioPlayed) {
+    // Play intro sound if provided and music is enabled
+    if (audioUrl && !audioPlayed && musicEnabled) {
       const audio = new Audio(audioUrl);
       audio.volume = 0.5; // Set volume to 50%
       
@@ -34,7 +36,7 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [onComplete, audioUrl, audioPlayed]);
+  }, [onComplete, audioUrl, audioPlayed, musicEnabled]);
 
   const handleSkip = () => {
     setIsVisible(false);
@@ -48,12 +50,17 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-background/95 backdrop-blur-sm transition-opacity duration-500 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-gradient-to-b from-background via-background/95 to-background z-50 flex items-center justify-center">
       <div className="relative w-full h-full flex items-center justify-center">
         {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/splash-screen.png)' }}
+        <img 
+          src="/lovable-uploads/0e02c224-538b-4fae-8bc0-f1ecf86fba2a.png"
+          alt="Mystical Forest Splash Screen"
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={(e) => {
+            // Fallback to a dark gradient if image fails to load
+            e.currentTarget.style.display = 'none';
+          }}
         />
         
         {/* Overlay for better text readability */}
