@@ -11,7 +11,6 @@ import { CustomSplashScreen } from "./components/CustomSplashScreen";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { SpookyMusicProvider } from "./contexts/SpookyMusicContext";
 import { SettingsPanel } from "./components/SettingsPanel";
-import { SpookyMusicToggle } from "./components/SpookyMusicToggle";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +40,6 @@ const App: React.FC = () => {
                 />
               )}
               <SettingsPanel />
-              <SpookyMusicToggle />
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Index />} />
