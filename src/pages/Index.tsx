@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { HybridDownloadCard } from "@/components/HybridDownloadCard";
 import { FileManager } from "@/components/FileManager";
+import { WitchCharacter, ChickenNuggetCharacter } from "@/components/WitchyCharacters";
+import { FloatingSparkles } from "@/components/FloatingSparkles";
 import { useToast } from "@/hooks/use-toast";
 import { downloadVideo } from "@/utils/hybridDownloadApi";
 import { addToDownloadHistory } from "@/utils/localStorageHistory";
@@ -71,9 +73,18 @@ const Index: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+      {/* Floating Background Effects */}
+      <FloatingSparkles />
+      
+      {/* Witchy Characters - positioned to avoid UI interference */}
+      <WitchCharacter position="left" />
+      <WitchCharacter position="right" />
+      <ChickenNuggetCharacter position="corner" />
+      <ChickenNuggetCharacter position="side" />
+      
       {/* Hero Section */}
-      <div className="relative">
+      <div className="relative z-20">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary-glow/10" />
         <div className="relative container mx-auto px-4 py-12 lg:py-20">
           <div className="text-center mb-12">
