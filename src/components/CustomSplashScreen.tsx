@@ -17,20 +17,21 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
 
   useEffect(() => {
     // Play intro sound if provided and music is enabled
-    if (audioUrl && !audioPlayed && musicEnabled) {
+    if (audioUrl && !audioPlayed) {
       const audio = new Audio(audioUrl);
       audio.volume = 0.5; // Set volume to 50%
-      audio.muted = !musicEnabled;
       audioRef.current = audio;
       
       // Register audio with settings context
       registerAudio(audio);
       
-      // Try to play audio (user interaction might be required)
-      audio.play().catch((error) => {
-        console.log('Audio autoplay blocked:', error);
-        // Audio will play on first user interaction
-      });
+      // Only play if music is enabled
+      if (musicEnabled) {
+        audio.play().catch((error) => {
+          console.log('Audio autoplay blocked:', error);
+          // Audio will play on first user interaction
+        });
+      }
       
       setAudioPlayed(true);
     }
@@ -43,14 +44,32 @@ export const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({
 
     return () => {
       clearTimeout(timer);
-      // Cleanup audio registration
+      // Cleanup audio registration on unmount only
       if (audioRef.current) {
         unregisterAudio(audioRef.current);
         audioRef.current.pause();
         audioRef.current = null;
       }
     };
-  }, [onComplete, audioUrl, audioPlayed, musicEnabled, registerAudio, unregisterAudio]);
+  }, [onComplete, audioUrl, audioPlayed, registerAudio, unregisterAudio]);
+
+  // Separate effect to handle music enabled changes
+  useEffect(() => {
+    if (audioRef.current) {
+      if (musicEnabled) {
+        audioRef.current.muted = false;
+        // Try to resume if paused
+        if (audioRef.current.paused) {
+          audioRef.current.play().catch((error) => {
+            console.log('Resume audio blocked:', error);
+          });
+        }
+      } else {
+        audioRef.current.muted = true;
+        audioRef.current.pause();
+      }
+    }
+  }, [musicEnabled]);
 
   const handleSkip = () => {
     // Stop audio when skipping
