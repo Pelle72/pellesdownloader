@@ -211,8 +211,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
           Pelle's Multi-Platform Grabber
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Download videos and audio from YouTube, TikTok, and Instagram
-          <br />
+          <div>Download videos and audio from YouTube, TikTok, and Instagram</div>
           <div className="flex items-center justify-center gap-2 mt-2">
             {supabaseReady ? (
               <div className="flex items-center gap-1 text-green-400">

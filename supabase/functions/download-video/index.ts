@@ -92,9 +92,9 @@ serve(async (req) => {
       apiUrl = `https://tiktok-video-no-watermark2.p.rapidapi.com/` 
       apiHost = 'tiktok-video-no-watermark2.p.rapidapi.com'
     } else if (platform === 'instagram') {
-      // Use Instagram120 API
-      apiUrl = `https://instagram120.p.rapidapi.com/`
-      apiHost = 'instagram120.p.rapidapi.com'
+      // Use Instagram downloader API with URL parameter
+      apiUrl = `https://instagram-downloader-download-instagram-videos-stories1.p.rapidapi.com/get-info-rapidapi?url=${encodeURIComponent(videoId)}`
+      apiHost = 'instagram-downloader-download-instagram-videos-stories1.p.rapidapi.com'
     } else {
       // Use YT-API for YouTube downloads
       apiUrl = `https://yt-api.p.rapidapi.com/dl?id=${videoId}`
@@ -120,15 +120,11 @@ serve(async (req) => {
     } else if (platform === 'instagram') {
       // Instagram API request
       response = await fetch(apiUrl, {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'X-RapidAPI-Key': rapidApiKey,
-          'X-RapidAPI-Host': apiHost,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          url: videoId
-        })
+          'X-RapidAPI-Host': apiHost
+        }
       })
     } else {
       // YouTube API request
@@ -175,22 +171,26 @@ serve(async (req) => {
         },
       )
     } else if (platform === 'instagram') {
-      if (!data || !data.data || (!data.data.video_url && !data.data.image_url)) {
-        throw new Error('Invalid response from Instagram API: no download URL found')
+      if (!data || !data.data) {
+        throw new Error('Invalid response from Instagram API: no data found')
       }
       
-      // Instagram can return either video or image
-      const downloadUrl = data.data.video_url || data.data.image_url
+      // This API typically returns video_url or image_url directly
+      const downloadUrl = data.data.video_url || data.data.image_url || data.data.download_url
       const mediaType = data.data.video_url ? 'video' : 'image'
+      
+      if (!downloadUrl) {
+        throw new Error('No download URL found in Instagram API response')
+      }
       
       return new Response(
         JSON.stringify({
           success: true,
           data: {
             downloadUrl: downloadUrl,
-            title: data.data.caption || 'Instagram Post',
-            duration: null,
-            thumbnail: data.data.image_url || null,
+            title: data.data.title || data.data.caption || 'Instagram Post',
+            duration: data.data.duration || null,
+            thumbnail: data.data.thumbnail || data.data.image_url || null,
             format: mediaType,
             quality: 'HD',
             fileSize: null
