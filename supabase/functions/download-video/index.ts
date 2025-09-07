@@ -56,6 +56,8 @@ serve(async (req) => {
       platform = 'instagram'
       videoId = url
       console.log('✅ Detected as Instagram URL')
+      // Temporarily disable Instagram until we find a working API
+      throw new Error('Instagram downloads are temporarily unavailable. Please use your RapidAPI key for direct access.')
     } else if (url.toLowerCase().includes('youtube') || url.toLowerCase().includes('youtu.be')) {
       // YouTube URL patterns
       const patterns = [
