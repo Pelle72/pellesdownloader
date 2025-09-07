@@ -52,6 +52,10 @@ serve(async (req) => {
       platform = 'tiktok'
       videoId = url
       console.log('✅ Detected as TikTok URL')
+    } else if (url.toLowerCase().includes('instagram')) {
+      platform = 'instagram'
+      videoId = url
+      console.log('✅ Detected as Instagram URL')
     } else if (url.toLowerCase().includes('youtube') || url.toLowerCase().includes('youtu.be')) {
       // YouTube URL patterns
       const patterns = [
@@ -74,8 +78,8 @@ serve(async (req) => {
         throw new Error('Invalid URL. Could not extract YouTube video ID.')
       }
     } else {
-      console.error('❌ URL not recognized as YouTube or TikTok:', url)
-      throw new Error('Invalid URL. Please provide a valid YouTube or TikTok URL.')
+      console.error('❌ URL not recognized as YouTube, TikTok, or Instagram:', url)
+      throw new Error('Invalid URL. Please provide a valid YouTube, TikTok, or Instagram URL.')
     }
 
     console.log('Platform:', platform)
@@ -87,6 +91,10 @@ serve(async (req) => {
       // Use dedicated TikTok API
       apiUrl = `https://tiktok-video-no-watermark2.p.rapidapi.com/` 
       apiHost = 'tiktok-video-no-watermark2.p.rapidapi.com'
+    } else if (platform === 'instagram') {
+      // Use Instagram120 API
+      apiUrl = `https://instagram120.p.rapidapi.com/`
+      apiHost = 'instagram120.p.rapidapi.com'
     } else {
       // Use YT-API for YouTube downloads
       apiUrl = `https://yt-api.p.rapidapi.com/dl?id=${videoId}`
@@ -109,6 +117,19 @@ serve(async (req) => {
           hd: 1
         })
       })
+    } else if (platform === 'instagram') {
+      // Instagram API request
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'X-RapidAPI-Key': rapidApiKey,
+          'X-RapidAPI-Host': apiHost,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url: videoId
+        })
+      })
     } else {
       // YouTube API request
       response = await fetch(apiUrl, {
@@ -129,7 +150,7 @@ serve(async (req) => {
     const data = await response.json()
     console.log(`${platform.toUpperCase()} API Response:`, JSON.stringify(data, null, 2))
 
-    // Handle different response formats for TikTok vs YouTube
+    // Handle different response formats for TikTok vs Instagram vs YouTube
     if (platform === 'tiktok') {
       if (!data || !data.data || !data.data.hdplay) {
         throw new Error('Invalid response from TikTok API: no download URL found')
@@ -144,6 +165,33 @@ serve(async (req) => {
             duration: data.data.duration ? `${Math.floor(data.data.duration / 60)}:${(data.data.duration % 60).toString().padStart(2, '0')}` : null,
             thumbnail: data.data.cover || null,
             format: format,
+            quality: 'HD',
+            fileSize: null
+          }
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      )
+    } else if (platform === 'instagram') {
+      if (!data || !data.data || (!data.data.video_url && !data.data.image_url)) {
+        throw new Error('Invalid response from Instagram API: no download URL found')
+      }
+      
+      // Instagram can return either video or image
+      const downloadUrl = data.data.video_url || data.data.image_url
+      const mediaType = data.data.video_url ? 'video' : 'image'
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            downloadUrl: downloadUrl,
+            title: data.data.caption || 'Instagram Post',
+            duration: null,
+            thumbnail: data.data.image_url || null,
+            format: mediaType,
             quality: 'HD',
             fileSize: null
           }

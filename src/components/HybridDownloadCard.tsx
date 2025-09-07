@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Download, Music, Video, Link, Loader2, ExternalLink, Key, Shield, CheckCircle } from "lucide-react";
+import { Download, Music, Video, Link, Loader2, ExternalLink, Key, Shield, CheckCircle, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { downloadVideo, triggerDownload, isSupabaseAvailable, type DownloadResult } from "@/utils/hybridDownloadApi";
 
@@ -17,6 +17,7 @@ interface HybridDownloadCardProps {
 export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResult }: HybridDownloadCardProps) => {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [tiktokUrl, setTiktokUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
   const [format, setFormat] = useState<"video" | "audio">("video");
   const [quality, setQuality] = useState("best");
   const [apiKey, setApiKey] = useState("");
@@ -77,16 +78,21 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
     return tiktokRegex.test(input);
   };
 
+  const validateInstagramUrl = (input: string) => {
+    const instagramRegex = /instagram/i;
+    return instagramRegex.test(input);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Check which URL is provided
-    const finalUrl = youtubeUrl.trim() || tiktokUrl.trim();
+    const finalUrl = youtubeUrl.trim() || tiktokUrl.trim() || instagramUrl.trim();
     
     if (!finalUrl) {
       toast({
         title: "URL Required",
-        description: "Please enter either a YouTube or TikTok URL",
+        description: "Please enter a YouTube, TikTok, or Instagram URL",
         variant: "destructive",
       });
       return;
@@ -106,6 +112,15 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
       toast({
         title: "Invalid TikTok URL", 
         description: "Please enter a valid TikTok URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (instagramUrl.trim() && !validateInstagramUrl(instagramUrl)) {
+      toast({
+        title: "Invalid Instagram URL",
+        description: "Please enter a valid Instagram URL",
         variant: "destructive",
       });
       return;
@@ -133,7 +148,8 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
     try {
       const text = await navigator.clipboard.readText();
       setYoutubeUrl(text);
-      setTiktokUrl(""); // Clear the other field
+      setTiktokUrl(""); // Clear the other fields
+      setInstagramUrl("");
       toast({
         title: "YouTube URL Pasted",
         description: "Link pasted from clipboard",
@@ -151,9 +167,29 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
     try {
       const text = await navigator.clipboard.readText();
       setTiktokUrl(text);
-      setYoutubeUrl(""); // Clear the other field
+      setYoutubeUrl(""); // Clear the other fields
+      setInstagramUrl("");
       toast({
         title: "TikTok URL Pasted",
+        description: "Link pasted from clipboard",
+      });
+    } catch (err) {
+      toast({
+        title: "Paste Error",
+        description: "Could not paste from clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInstagramPaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setInstagramUrl(text);
+      setYoutubeUrl(""); // Clear the other fields
+      setTiktokUrl("");
+      toast({
+        title: "Instagram URL Pasted",
         description: "Link pasted from clipboard",
       });
     } catch (err) {
@@ -172,10 +208,10 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
           <Download className="w-8 h-8 text-primary-foreground" />
         </div>
         <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Pelle's YouTube and TikTok grabber
+          Pelle's Multi-Platform Grabber
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Download videos and audio from YouTube and TikTok (including Shorts)
+          Download videos and audio from YouTube, TikTok, and Instagram
           <br />
           <div className="flex items-center justify-center gap-2 mt-2">
             {supabaseReady ? (
@@ -232,7 +268,10 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
                 value={youtubeUrl}
                 onChange={(e) => {
                   setYoutubeUrl(e.target.value);
-                  if (e.target.value) setTiktokUrl(""); // Clear TikTok field
+                  if (e.target.value) {
+                    setTiktokUrl(""); // Clear other fields
+                    setInstagramUrl("");
+                  }
                 }}
                 className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                 disabled={isLoading}
@@ -264,7 +303,10 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
                 value={tiktokUrl}
                 onChange={(e) => {
                   setTiktokUrl(e.target.value);
-                  if (e.target.value) setYoutubeUrl(""); // Clear YouTube field
+                  if (e.target.value) {
+                    setYoutubeUrl(""); // Clear other fields
+                    setInstagramUrl("");
+                  }
                 }}
                 className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
                 disabled={isLoading}
@@ -275,6 +317,41 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
                 size="sm"
                 className="absolute right-2 top-2 h-8 px-2"
                 onClick={handleTikTokPaste}
+                disabled={isLoading}
+              >
+                Paste
+              </Button>
+            </div>
+          </div>
+
+          {/* Instagram URL Input */}
+          <div className="space-y-2">
+            <Label htmlFor="instagramUrl" className="text-sm font-medium">
+              Instagram URL
+            </Label>
+            <div className="relative">
+              <Camera className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="instagramUrl"
+                type="url"
+                placeholder="Paste Instagram link here"
+                value={instagramUrl}
+                onChange={(e) => {
+                  setInstagramUrl(e.target.value);
+                  if (e.target.value) {
+                    setYoutubeUrl(""); // Clear other fields
+                    setTiktokUrl("");
+                  }
+                }}
+                className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
+                disabled={isLoading}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-2 h-8 px-2"
+                onClick={handleInstagramPaste}
                 disabled={isLoading}
               >
                 Paste
@@ -343,7 +420,7 @@ export const HybridDownloadCard = ({ onDownload, isLoading = false, downloadResu
             variant="hero"
             size="lg"
             className="w-full h-12"
-            disabled={isLoading || (!youtubeUrl.trim() && !tiktokUrl.trim())}
+            disabled={isLoading || (!youtubeUrl.trim() && !tiktokUrl.trim() && !instagramUrl.trim())}
           >
             {isLoading ? (
               <>
